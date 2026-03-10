@@ -6,7 +6,12 @@ const props = defineProps<{
 </script>
 
 <template>
-  <div class="param-input">
+  <div
+    un-flex="~ row"
+    un-gap-4
+    un-justify-between
+    un-items-center
+  >
     <label
       un-text-base
       :for="labelId"

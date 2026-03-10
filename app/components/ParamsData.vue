@@ -1,6 +1,4 @@
 <script setup lang="ts">
-import type { TimeSeries } from '~/types/mutation'
-
 const props = defineProps<{
   tCandidates?: number[]
 }>()
@@ -8,7 +6,8 @@ const props = defineProps<{
 const emit = defineEmits<{
   (e: 'update:dataParams', dataParams: {
     agg: string
-    clipIndexRange?: [number, number]
+    clipRange?: [number, number]
+    dataset?: string
   }): void
 }>()
 
@@ -29,17 +28,21 @@ const tMax = computed(() => {
 
 const aggregateMethodSelected = ref<string>('avg')
 const aggregateMethodCandidates = ['avg', 'sum', 'min', 'max', 'range', 'var', 'DJF', 'MAM', 'JJA', 'SON']
+const datasetSelected = ref<string | undefined>('era5')
+const datasetCandidates = ['era5', 'yang']
 
 watch(
   [
     aggregateMethodSelected,
     clipStartSelected,
     clipEndSelected,
+    datasetSelected,
   ],
   () => {
     const dataParams: {
       agg: string
       clipRange?: [number, number]
+      dataset?: string
     } = {
       agg: aggregateMethodSelected.value,
     }
@@ -55,6 +58,8 @@ watch(
         clipEndSelected.value,
       ]
     }
+    if (datasetSelected.value && datasetSelected.value !== 'default')
+      dataParams.dataset = datasetSelected.value
     emit('update:dataParams', dataParams)
   },
   { immediate: true },
@@ -74,6 +79,17 @@ watch(
         <QSelect
           v-model="aggregateMethodSelected"
           :items="aggregateMethodCandidates"
+        />
+      </template>
+    </QLabelValuePair>
+    <QLabelValuePair
+      label-id="dataset-select"
+      label-text="Dataset"
+    >
+      <template #value>
+        <QSelect
+          v-model="datasetSelected"
+          :items="datasetCandidates"
         />
       </template>
     </QLabelValuePair>

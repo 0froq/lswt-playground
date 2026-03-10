@@ -1,0 +1,13 @@
+{
+  "id": "T-d6d7889f-6151-443e-866e-fd138fd6d08e",
+  "subject": "重构计划：集成 slidev",
+  "description": "添加 slidev 演示功能到文档站点",
+  "status": "completed",
+  "blocks": [],
+  "blockedBy": [],
+  "metadata": {
+    "wave": 4,
+    "type": "add_slidev"
+  },
+  "threadID": "ses_328f2e463ffeWns9mEAoVLmI1g"
+}

@@ -1,18 +1,28 @@
 <script setup lang="ts">
 import { useEventListener } from '@vueuse/core'
-import { nextTick, onBeforeUnmount, onMounted, ref } from 'vue'
+import { computed, nextTick, onBeforeUnmount, onMounted, ref } from 'vue'
 
-const props = defineProps<{
-  modelValue?: string
+const props = withDefaults(defineProps<{
+  modelValue?: string | string[]
   items: string[]
   placeholder?: string
-}>()
+  multiple?: boolean
+}>(), {
+  multiple: false,
+})
 
 const emit = defineEmits(['update:modelValue'])
 
 const open = ref(false)
 const buttonRef = ref<HTMLElement | null>(null)
 const popupStyle = ref<Record<string, string>>({})
+const popupId = `qselect-popup-${Math.random().toString(36).slice(2, 8)}`
+
+const selectedLabel = computed(() => {
+  if (Array.isArray(props.modelValue))
+    return props.modelValue.length ? props.modelValue.join(', ') : (props.placeholder ?? 'Select')
+  return props.modelValue ?? props.placeholder ?? 'Select'
+})
 
 function calculatePosition() {
   const btn = buttonRef.value
@@ -49,21 +59,54 @@ function calculatePosition() {
   }
 }
 
+function scrollSelectedIntoView() {
+  const popup = document.getElementById(popupId)
+  if (!popup)
+    return
+  const selectedEl = popup.querySelector('[data-selected="true"]') as HTMLElement | null
+  if (!selectedEl)
+    return
+  selectedEl.scrollIntoView({ block: 'nearest', inline: 'nearest' })
+}
+
 async function openSelect() {
   open.value = !open.value
   if (open.value) {
     await nextTick()
     // initial calculate
     calculatePosition()
+    scrollSelectedIntoView()
     // ensure layout/fonts settle: recalc on next animation frames and a short timeout
-    requestAnimationFrame(() => calculatePosition())
     requestAnimationFrame(() => {
-      setTimeout(() => calculatePosition(), 50)
+      calculatePosition()
+      scrollSelectedIntoView()
+    })
+    requestAnimationFrame(() => {
+      setTimeout(() => {
+        calculatePosition()
+        scrollSelectedIntoView()
+      }, 50)
     })
   }
 }
 
+function isSelected(item: string) {
+  if (Array.isArray(props.modelValue))
+    return props.modelValue.includes(item)
+  return props.modelValue === item
+}
+
 function selectItem(item: string) {
+  if (props.multiple || Array.isArray(props.modelValue)) {
+    const current = Array.isArray(props.modelValue) ? [...props.modelValue] : []
+    const index = current.indexOf(item)
+    if (index === -1)
+      current.push(item)
+    else
+      current.splice(index, 1)
+    emit('update:modelValue', current)
+    return
+  }
   emit('update:modelValue', item)
   open.value = false
 }
@@ -71,7 +114,7 @@ function selectItem(item: string) {
 function handleClickOutside(e: MouseEvent) {
   const target = e.target as Node
   const btn = buttonRef.value
-  const popup = document.getElementById('qselect-popup')
+  const popup = document.getElementById(popupId)
   if (!btn)
     return
   if (btn.contains(target))
@@ -95,14 +138,17 @@ useEventListener(window, 'scroll', () => {
     calculatePosition()
 }, { passive: true })
 
-onMounted(() => {
-  window.addEventListener('click', handleClickOutside)
-  window.addEventListener('keydown', onKeydown)
-})
-onBeforeUnmount(() => {
-  window.removeEventListener('click', handleClickOutside)
-  window.removeEventListener('keydown', onKeydown)
-})
+useEventListener(document, 'click', handleClickOutside)
+useEventListener(document, 'keydown', onKeydown)
+
+// onMounted(() => {
+//   window.addEventListener('click', handleClickOutside)
+//   window.addEventListener('keydown', onKeydown)
+// })
+// onBeforeUnmount(() => {
+//   window.removeEventListener('click', handleClickOutside)
+//   window.removeEventListener('keydown', onKeydown)
+// })
 </script>
 
 <template>
@@ -124,7 +170,7 @@ onBeforeUnmount(() => {
       un-gap-2
       @click="openSelect"
     >
-      <span>{{ props.modelValue ?? props.placeholder ?? 'Select' }}</span>
+      <span>{{ multiple ? `${props.modelValue?.length} selected` : selectedLabel }}</span>
     </button>
     <un-i-ph-caret-down-duotone
       un-text="neutral-500 dark:neutral-400"
@@ -137,7 +183,7 @@ onBeforeUnmount(() => {
   <Teleport to="body">
     <div
       v-if="open"
-      id="qselect-popup"
+      :id="popupId"
       :style="popupStyle"
       un-bg="neutral-100 dark:neutral-900"
       un-shadow-lg
@@ -149,13 +195,14 @@ onBeforeUnmount(() => {
         <li
           v-for="item in props.items"
           :key="item"
+          :data-selected="isSelected(item)"
           un-p-1
           un-cursor-pointer
           un-text-sm
           un-break-normal
           un-transition-colors
-          :un-bg="props.modelValue === item ? 'neutral-700 dark:neutral-300' : 'hover:neutral-300 dark:hover:neutral-700'"
-          :un-text="props.modelValue === item ? 'neutral-100 dark:neutral-900' : 'neutral-800 dark:neutral-200'"
+          :un-bg="isSelected(item) ? 'neutral-700 dark:neutral-300' : 'hover:neutral-300 dark:hover:neutral-700'"
+          :un-text="isSelected(item) ? 'neutral-100 dark:neutral-900' : 'neutral-800 dark:neutral-200'"
           @click="selectItem(item)"
           @mouseenter.prevent
         >

@@ -4,11 +4,16 @@ import { computed, Static } from 'vue'
 
 const props = defineProps<{
   mutations?: MutationPoint[]
-  timeFilter?: {
-    start?: number | undefined
-    end?: number | undefined
-  }
+  tCandidates?: number[]
 }>()
+
+const timeFilterRange = ref<{
+  start: number | undefined
+  end: number | undefined
+}>({
+  start: undefined,
+  end: undefined,
+})
 
 interface ScatterPoint {
   year: number
@@ -22,13 +27,13 @@ interface TimeFilterRange {
   end?: number | null
 }
 
-function computeColorScale(val: number, min: number, max: number) {
-  if (min === max)
-    return 'hsl(60, 100%, 50%)'
-  const t = (val - min) / (max - min)
-  const hue = Math.round((1 - t) * 60) // yellow->red
-  return `hsl(${hue}, 100%, 50%)`
-}
+// function computeColorScale(val: number, min: number, max: number) {
+//   if (min === max)
+//     return 'hsl(60, 100%, 50%)'
+//   const t = (val - min) / (max - min)
+//   const hue = Math.round((1 - t) * 60) // yellow->red
+//   return `hsl(${hue}, 100%, 50%)`
+// }
 
 function isFiniteNumber(value: unknown): value is number {
   return typeof value === 'number' && Number.isFinite(value)
@@ -413,9 +418,10 @@ const hasData = computed(() => chartCards.value.some(card => card.chart !== null
         style="flex: 1 1 320px; min-width: 280px;"
       >
         <div v-if="card.chart">
-          <PlotlyChart
+          <PlotlyCompo
             :data="card.chart.data"
             :layout="card.chart.layout"
+            type="chart"
             un-h-30vh
           />
         </div>

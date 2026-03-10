@@ -1,9 +1,10 @@
 <script setup lang="ts">
-import type { MutationPoint, TimeSeries } from '~/types/mutation'
+import type { TimeSeries } from '~/types/mutation'
+import type { Break } from '~/types/segments'
 
 const props = defineProps<{
   timeSeries?: Record<string, TimeSeries | undefined>
-  mutations?: MutationPoint[]
+  breaks?: Break[]
 }>()
 
 const data: ComputedRef<Plotly.Data[]> = computed(() => {
@@ -25,12 +26,12 @@ const data: ComputedRef<Plotly.Data[]> = computed(() => {
       name: 'Raw Series',
       marker: {
         color: usePlotlyColor('marker'),
-        symbol: 'circle-open',
+        symbol: 'circle',
       },
       line: {
-        color: usePlotlyColor('axis'),
+        color: usePlotlyColor('line'),
         shape: 'spline',
-        width: 3,
+        width: 2,
       },
       hovertemplate: '%{y:.3f}<extra></extra>',
       yaxis: 'y1',
@@ -44,12 +45,8 @@ const data: ComputedRef<Plotly.Data[]> = computed(() => {
       type: 'scatter',
       mode: 'lines',
       name: 'Processed Series',
-      marker: {
-        color: usePlotlyColor('marker'),
-        symbol: 'diamond-open',
-      },
       line: {
-        color: usePlotlyColor('line'),
+        color: usePlotlyColor('lineMuted'),
         shape: 'spline',
         width: 1,
       },
@@ -62,13 +59,53 @@ const data: ComputedRef<Plotly.Data[]> = computed(() => {
 })
 
 const layout = computed(() => {
+  const raw = props.timeSeries?.raw
+  const processed = props.timeSeries?.processed
+
+  const resolveBreakY = (breakPoint: Break): number | undefined => {
+    const fromRawByIndex = raw?.points?.[breakPoint.yearIndex]?.v
+    if (Number.isFinite(fromRawByIndex))
+      return fromRawByIndex
+
+    const fromRawByYear = raw?.points?.find(p => p.t.getFullYear() === breakPoint.year)?.v
+    if (Number.isFinite(fromRawByYear))
+      return fromRawByYear
+
+    const fromProcessedByIndex = processed?.points?.[breakPoint.yearIndex]?.v
+    if (Number.isFinite(fromProcessedByIndex))
+      return fromProcessedByIndex
+
+    const fromProcessedByYear = processed?.points?.find(p => p.t.getFullYear() === breakPoint.year)?.v
+    if (Number.isFinite(fromProcessedByYear))
+      return fromProcessedByYear
+
+    return undefined
+  }
+
+  const rawValues = raw?.points?.map(p => p.v) || []
+  const processedValues = processed?.points?.map(p => p.v) || []
+
+  const rawMin = rawValues.length ? Math.min(...rawValues) : 0
+  const rawMax = rawValues.length ? Math.max(...rawValues) : 1
+  const processedMin = processedValues.length ? Math.min(...processedValues) : 0
+  const processedMax = processedValues.length ? Math.max(...processedValues) : 1
+
+  const rawRange = rawMax - rawMin
+  const processedRange = processedMax - processedMin
+
+  // Calculate aligned ranges to make gridlines coincide
+  const nticks = 6
+  const rawPadding = rawRange * 0.1
+  const processedPadding = processedRange * 0.1
+
+  const y1Min = rawMin - rawPadding
+  const y1Max = rawMax + rawPadding
+  const y2Min = processedMin - processedPadding
+  const y2Max = processedMax + processedPadding
+
+  const breakHalfSpan = Math.max(rawRange, processedRange) * 0.15
+
   const layoutObj: Record<string, any> = {
-    margin: {
-      t: 50,
-      r: 50,
-      b: 50,
-      l: 50,
-    },
     hovermode: 'x unified',
     hoverlabel: {
       bgcolor: usePlotlyColor('floatBg'),
@@ -84,58 +121,35 @@ const layout = computed(() => {
       },
       text: `${props.timeSeries?.[0]?.label || ''} Time Series`,
     },
-    xaxis: {
-      spikecolor: usePlotlyColor('line'),
-      tickfont: {
-        color: usePlotlyColor('label'),
-      },
-      zerolinecolor: usePlotlyColor('axis'),
-      gridcolor: usePlotlyColor('grid'),
-      title: 'Time',
-    },
     yaxis: {
-      title: 'Raw Value',
-      tickfont: {
-        color: usePlotlyColor('label'),
-      },
-      zerolinecolor: usePlotlyColor('axis'),
-      gridcolor: usePlotlyColor('grid'),
       side: 'left',
+      range: [y1Min, y1Max],
+      nticks,
     },
     yaxis2: {
-      title: 'Processed Value',
-      tickfont: {
-        color: usePlotlyColor('label'),
-      },
-      zerolinecolor: usePlotlyColor('axis'),
-      // gridcolor: usePlotlyColor('grid'),
       overlaying: 'y',
       side: 'right',
-    },
-    legend: {
-      xanchor: 'right',
-      yanchor: 'top',
-      bgcolor: usePlotlyColor('floatBg'),
-      bordercolor: usePlotlyColor('floatBorder'),
-      borderwidth: 1,
-      font: {
-        color: usePlotlyColor('text'),
-      },
+      range: [y2Min, y2Max],
+      nticks,
     },
   }
 
-  props.mutations?.forEach((mutation) => {
+  props.breaks?.forEach((breakPoint) => {
+    const yCenter = resolveBreakY(breakPoint)
+    if (!Number.isFinite(yCenter) || yCenter === undefined)
+      return
+
+    // Draw short vertical ticks centered at the series value instead of spanning the full plot.
     layoutObj.shapes = layoutObj.shapes || []
-    layoutObj.annotations = layoutObj.annotations || []
 
     layoutObj.shapes.push({
       type: 'line',
-      x0: new Date(mutation.year, 0, 1),
-      x1: new Date(mutation.year, 0, 1),
-      y0: 0,
-      y1: 1,
+      x0: new Date(breakPoint.year, 0, 1),
+      x1: new Date(breakPoint.year, 0, 1),
+      y0: yCenter - breakHalfSpan,
+      y1: yCenter + breakHalfSpan,
       xref: 'x',
-      yref: 'paper',
+      yref: 'y',
       line: {
         color: 'orange',
         width: 2,
@@ -146,6 +160,8 @@ const layout = computed(() => {
 
   return layoutObj
 })
+watchEffect(() => {
+})
 </script>
 
 <template>
@@ -154,9 +170,10 @@ const layout = computed(() => {
     un-h-full
     un-border="~ neutral-300 dark:neutral-700"
   >
-    <PlotlyChart
+    <PlotlyCompo
       :data="data"
       :layout="layout"
+      type="chart"
     />
   </div>
 </template>

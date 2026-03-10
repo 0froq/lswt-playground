@@ -9,10 +9,9 @@ const props = defineProps<{
     label: string
     lat: number
     lon: number
-  }>
+  }> | undefined
   mutations?: MutationPoint[]
-  colorMode?: 'mutationYear' | 'deltaAvg' | 'none'
-  timeFilter?: {
+  timeFilterRange: {
     start?: number | undefined
     end?: number | undefined
   }
@@ -39,7 +38,7 @@ function withinTimeFilter(year: number | undefined, filter?: { start?: number | 
 const filteredMutations = computed(() => {
   if (!props.mutations?.length)
     return [] as MutationPoint[]
-  return props.mutations.filter(mutation => withinTimeFilter(mutation.year, props.timeFilter))
+  return props.mutations.filter(mutation => withinTimeFilter(mutation.year, props.timeFilterRange))
 })
 
 const combinedMutationChart = computed<{ data: PlotlyData[], layout: Partial<PlotlyLayout> } | null>(() => {
@@ -170,13 +169,13 @@ function computeColorScale(val: number, minV: number, maxV: number) {
   return `hsl(${hue}, 100%, 50%)`
 }
 
-function divergingColorScale(v: number, minV: number, maxV: number) {
-  if (minV === maxV)
-    return 'hsl(0, 60%, 50%)'
-  const t = (v - minV) / (maxV - minV)
-  const hue = Math.round((1 - t) * 240) // blue->red
-  return `hsl(${hue}, 70%, 50%)`
-}
+// function divergingColorScale(v: number, minV: number, maxV: number) {
+//   if (minV === maxV)
+//     return 'hsl(0, 60%, 50%)'
+//   const t = (v - minV) / (maxV - minV)
+//   const hue = Math.round((1 - t) * 240) // blue->red
+//   return `hsl(${hue}, 70%, 50%)`
+// }
 
 const plotData = computed<PlotlyData[]>(() => {
   const pts = props.lakes ?? []
@@ -194,30 +193,20 @@ const plotData = computed<PlotlyData[]>(() => {
   const minY = years.length ? Math.min(...years) : 0
   const maxY = years.length ? Math.max(...years) : 0
 
-  const deltas = pts.map((p) => {
-    const m = mutMap.get(p.id)
-    return m ? (m.postAvg - m.preAvg) : Number.NaN
-  })
-  const valid = deltas.filter(v => Number.isFinite(v)) as number[]
-  const minV = valid.length ? Math.min(...valid) : 0
-  const maxV = valid.length ? Math.max(...valid) : 0
+  // const deltas = pts.map((p) => {
+  //   const m = mutMap.get(p.id)
+  //   return m ? (m.postAvg - m.preAvg) : Number.NaN
+  // })
+  // const valid = deltas.filter(v => Number.isFinite(v)) as number[]
+  // const minV = valid.length ? Math.min(...valid) : 0
+  // const maxV = valid.length ? Math.max(...valid) : 0
 
-  if (props.colorMode === 'mutationYear') {
-    colors = pts.map((p) => {
-      const m = mutMap.get(p.id)
-      return m?.year ?? usePlotlyColor('background')
-    })
-    // colors = years
-    sizes = pts.map(p => mutMap.has(p.id) ? 12 : 8)
-  }
-  else if (props.colorMode === 'deltaAvg') {
-    colors = deltas.map(d => Number.isFinite(d) ? divergingColorScale(d, minV, maxV) : usePlotlyColor('background'))
-    sizes = deltas.map(d => Number.isFinite(d) ? 12 : 8)
-  }
-  else {
-    colors = pts.map(() => '#3b82f6')
-    sizes = pts.map(() => 8)
-  }
+  colors = pts.map((p) => {
+    const m = mutMap.get(p.id)
+    return m?.year ?? usePlotlyColor('background')
+  })
+  // colors = years
+  sizes = pts.map(p => mutMap.has(p.id) ? 12 : 8)
 
   const traces: PlotlyData[] = [{
     mode: 'markers',
@@ -251,11 +240,7 @@ const plotData = computed<PlotlyData[]>(() => {
           symbol: 'star',
           colorscale: 'YlOrRd',
           color: mutMap.get(selected.id)
-            ? (props.colorMode === 'mutationYear'
-                ? computeColorScale(mutMap.get(selected.id)!.year, minY, maxY)
-                : (props.colorMode === 'deltaAvg'
-                    ? divergingColorScale(mutMap.get(selected.id)!.postAvg - mutMap.get(selected.id)!.preAvg, minV, maxV)
-                    : usePlotlyColor('background')))
+            ? computeColorScale(mutMap.get(selected.id)!.year, minY, maxY)
             : usePlotlyColor('background'),
           line: { width: 2, color: usePlotlyColor('title') },
         },
@@ -301,10 +286,11 @@ function handlePointClick(event: any) {
       un-w="50%"
       un-border="~ neutral-300 dark:neutral-700"
     >
-      <PlotlyMap
+      <PlotlyCompo
         :data="plotData"
         :layout="plotLayout"
         :config="plotConfig"
+        type="map"
         un-h-40vh
         @plotly-click="handlePointClick"
       />
@@ -320,10 +306,11 @@ function handlePointClick(event: any) {
         un-gap-2
         un-border="~ neutral-300 dark:neutral-700"
       >
-        <PlotlyChart
+        <PlotlyCompo
           v-if="combinedMutationChart"
           :data="combinedMutationChart.data"
           :layout="combinedMutationChart.layout"
+          type="chart"
           un-h-40vh
         />
         <p

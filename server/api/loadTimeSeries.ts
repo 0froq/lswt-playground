@@ -48,7 +48,7 @@ function parseWideCSVLocal(csvText: string, idColumn: string, agg: string = 'avg
 
   // Group time columns by year (or season) for aggregation
   // Support seasonal aggregation: DJF (Dec-Jan-Feb), MAM (Mar-Apr-May), JJA (Jun-Jul-Aug), SON (Sep-Oct-Nov)
-  const isSeasonal = /^(DJF|MAM|JJA|SON)$/i.test(agg)
+  const isSeasonal = /^(?:DJF|MAM|JJA|SON)$/i.test(agg)
   const seasonKey = isSeasonal ? agg.toUpperCase() : null
 
   const yearToCols = new Map<number, number[]>()
@@ -141,7 +141,7 @@ function parseWideCSVLocal(csvText: string, idColumn: string, agg: string = 'avg
       return null
     const aggLower = (agg || 'avg').toLowerCase()
     // For seasonal aggregations, use avg as the aggregation method
-    const effectiveAgg = /^(djf|mam|jja|son)$/i.test(aggLower) ? 'avg' : aggLower
+    const effectiveAgg = /^(?:djf|mam|jja|son)$/i.test(aggLower) ? 'avg' : aggLower
 
     switch (effectiveAgg) {
       case 'max': return Math.max(...arr)
@@ -198,13 +198,19 @@ export default defineEventHandler(async (event) => {
     idColumn?: string
     agg?: string
     clipRange?: string
-    csvPath?: string
+    dataset?: string
   }
   const idColumn = (query.idColumn ?? 'lake_id').trim()
   const aggParam = (query.agg ?? 'avg').trim().toLowerCase()
   const rawClipIndexRange = (query.clipRange ?? '').split(',')
   const clipIndexRange = rawClipIndexRange.length === 0 ? [Number(rawClipIndexRange[0]), Number(rawClipIndexRange[1])] as [number, number] : undefined
-  const csvPathParam = (query.csvPath ?? 'public/lake_temperature.csv').trim()
+  const datasetParam = (query.dataset ?? '').toString().trim().toLowerCase()
+  // If csvPath explicitly provided, use it. Otherwise choose based on dataset.
+  // const csvPathParam = (query.csvPath ?? (datasetParam === 'era5' ? 'public/lake_temperature_era5.csv' : 'public/lake_temperature.csv')).toString().trim()
+  const csvPathParam = (datasetParam
+    ? `public/lake_temperature_${datasetParam}.csv`
+    : `public/lake_temperature_era5.csv`
+  )
 
   if (!idColumn) {
     setResponseStatus(event, 400)

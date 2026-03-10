@@ -1,4 +1,11 @@
 <script setup lang="ts">
+const props = defineProps<{
+  defaultOverrides?: {
+    smoothWindow?: number
+    diffOrder?: number
+  }
+}>()
+
 const emit = defineEmits<{
   (e: 'update:preprocessParams', preprocessParams: {
     smoothWindow: number
@@ -6,9 +13,15 @@ const emit = defineEmits<{
   }): void
 }>()
 
-const diffOrderSelected = ref<number>(1)
+const diffOrderSelected = ref<number>(props.defaultOverrides?.diffOrder ?? 0)
+// const diffOrderSelected = computed<number>(() => {
+//   return props.defaultOverrides?.diffOrder ?? 0
+// })
 
-const smoothWindowSelected = ref<number>(1)
+const smoothWindowSelected = ref<number>(props.defaultOverrides?.smoothWindow ?? 1)
+// const smoothWindowSelected = computed<number>(() => {
+//   return props.defaultOverrides?.smoothWindow ?? 1
+// })
 
 watch(
   [

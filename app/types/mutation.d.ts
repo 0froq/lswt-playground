@@ -38,6 +38,13 @@ export interface TimeSeries {
   points: { t: Date, v: number }[]
 }
 
+export interface LakePoint {
+  id: string
+  lat: number
+  lon: number
+  label: string
+}
+
 export interface MutationPoint {
   lakeId: string
   year: number

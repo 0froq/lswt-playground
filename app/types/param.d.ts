@@ -1,6 +1,7 @@
 export interface ParamsData {
   agg: string
   clipRange?: [number, number]
+  dataset?: string
 }
 
 export interface ParamsPreprocess {
@@ -11,4 +12,9 @@ export interface ParamsPreprocess {
 export interface ParamsMutation {
   mutationMethod: string
   minSegLen: number
+}
+
+export interface ParamsSegment {
+  presetKey: string
+  breakYears: number[]
 }

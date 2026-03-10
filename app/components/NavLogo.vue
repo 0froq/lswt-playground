@@ -4,7 +4,7 @@ import SvgFroqLogo from '~/components/SvgFroqLogo.vue'
 
 <template>
   <div
-    un-m-4
+    un-m-2
     un-top-0
     un-z-100
     un-sticky

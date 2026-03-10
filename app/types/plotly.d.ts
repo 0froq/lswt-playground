@@ -4,6 +4,7 @@ export interface PlotlyColorElement {
   grid: string
   text: string
   line: string
+  lineMuted: string
   marker: string
   markerBorder: string
   floatBg: string

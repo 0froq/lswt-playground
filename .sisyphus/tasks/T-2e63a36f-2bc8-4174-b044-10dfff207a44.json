@@ -1,0 +1,13 @@
+{
+  "id": "T-2e63a36f-2bc8-4174-b044-10dfff207a44",
+  "subject": "重构计划：重构组件结构",
+  "description": "逐个查看和重构组件，优化代码结构",
+  "status": "completed",
+  "blocks": [],
+  "blockedBy": [],
+  "metadata": {
+    "wave": 5,
+    "type": "refactor_components"
+  },
+  "threadID": "ses_328f2e463ffeWns9mEAoVLmI1g"
+}

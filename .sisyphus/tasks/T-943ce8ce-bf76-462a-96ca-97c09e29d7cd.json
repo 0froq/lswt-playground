@@ -1,0 +1,13 @@
+{
+  "id": "T-943ce8ce-bf76-462a-96ca-97c09e29d7cd",
+  "subject": "重构计划：更新首页为文档站点",
+  "description": "重写 index.vue 为文档首页，使用 nuxt-content",
+  "status": "completed",
+  "blocks": [],
+  "blockedBy": [],
+  "metadata": {
+    "wave": 2,
+    "type": "update_index"
+  },
+  "threadID": "ses_328f2e463ffeWns9mEAoVLmI1g"
+}
