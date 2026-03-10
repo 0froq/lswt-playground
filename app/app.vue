@@ -27,6 +27,14 @@ useHead({
 /*   font-family: 'QiushuiShotaiTC'; */
 /*   src: url('~/assets/fonts/QiushuiShotai.ttf'); */
 /* } */
+@font-face {
+  font-family: 'LXGW Bright Code TC';
+  src: url('assets/fonts/LXGWBrightCodeTC-ExtraLight.ttf');
+}
+@font-face {
+  font-family: 'LXGW Neo ZhiSong Plus';
+  src: url('assets/fonts/LXGWNeoZhiSongPlus.ttf');
+}
 
 html,
 body,
