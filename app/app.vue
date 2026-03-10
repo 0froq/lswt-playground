@@ -18,23 +18,8 @@ useHead({
 
 <style>
 @import url('https://fontsapi.zeoseven.com/232/tc/result.css');
-/* @font-face { */
-/*   font-family: 'YshiPenShutiTC'; */
-/*   src: url('~/assets/fonts/YshiPenShutiTC-Regular.ttf'); */
-/* } */
-
-/* @font-face { */
-/*   font-family: 'QiushuiShotaiTC'; */
-/*   src: url('~/assets/fonts/QiushuiShotai.ttf'); */
-/* } */
-@font-face {
-  font-family: 'LXGW Bright Code TC';
-  src: url('assets/fonts/LXGWBrightCodeTC-ExtraLight.ttf');
-}
-@font-face {
-  font-family: 'LXGW Neo ZhiSong Plus';
-  src: url('assets/fonts/LXGWNeoZhiSongPlus.ttf');
-}
+@import url('https://fontsapi.zeoseven.com/994/main/result.css');
+@import url('https://cdn.jsdelivr.net/gh/game1024/web-fonts@main/LXGWNeoZhiSong/result.css');
 
 html,
 body,
