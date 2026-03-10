@@ -17,9 +17,9 @@ export default defineConfig({
     },
   },
   rules: [
-    ['font-sans', { 'font-family': 'LXGW Neo ZhiSong Plus' }],
+    ['font-sans', { 'font-family': 'LXGW Neo ZhiSong' }],
     ['font-serif', { 'font-family': 'YshiPen-ShutiTC' }],
-    ['font-mono', { 'font-family': 'LXGW Bright Code TC' }],
+    ['font-mono', { 'font-family': 'LXGW Bright Code' }],
   ],
   shortcuts: [
   ],
