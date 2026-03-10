@@ -1,0 +1,15 @@
+{
+  "simple-git-hooks": {
+    "pre-commit": "pnpm lint-staged",
+    "commit-msg": "pnpm commitlint --edit $1"
+  },
+  "lint-staged": {
+    "*.{js,ts,vue}": [
+      "eslint --fix",
+      "vue-tsc --noEmit"
+    ],
+    "*.{json,md}": [
+      "prettier --write"
+    ]
+  }
+}
