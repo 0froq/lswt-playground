@@ -20,9 +20,12 @@ export default defineConfig({
     ['font-sans', { 'font-family': 'LXGW Neo ZhiSong' }],
     ['font-serif', { 'font-family': 'YshiPen-ShutiTC' }],
     ['font-mono', { 'font-family': 'LXGW Bright Code' }],
+    ['font-stylish', { 'font-family': 'Caveat' }],
+    ['font-script', { 'font-family': 'Ephesis' }],
   ],
-  shortcuts: [
-  ],
+  shortcuts: {
+    'page-content': 'mx-auto max-w-[800px] block px-10 min-w-0',
+  },
   safelist: [
   ],
   content: {
