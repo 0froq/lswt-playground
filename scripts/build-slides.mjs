@@ -2,7 +2,8 @@
 import { execSync } from 'node:child_process'
 import { existsSync, mkdirSync } from 'node:fs'
 import { readdir, cp, rm } from 'node:fs/promises'
-import { join, basename } from 'node:path'
+import { join, basename, resolve } from 'node:path'
+import { tmpdir } from 'node:os'
 
 const SLIDES_DIR = 'content/slides'
 const OUTPUT_DIR = 'public/slides-export'
@@ -33,23 +34,31 @@ async function buildSlides() {
     const inputPath = join(SLIDES_DIR, file)
     const outputPath = join(OUTPUT_DIR, name)
     const assetsPath = join(SLIDE_ASSETS_DIR, name)
-    const tempAssetsPath = join(SLIDES_DIR, 'assets')
 
     console.log(`📊 Building ${name}...`)
 
-    // Copy assets to content/slides/assets temporarily if they exist
-    let assetsCopied = false
-    if (existsSync(assetsPath)) {
-      console.log(`  📁 Copying assets for ${name}...`)
-      await cp(assetsPath, tempAssetsPath, { recursive: true, force: true })
-      assetsCopied = true
-    }
+    // Create temp working directory
+    const tempDir = join(tmpdir(), `slidev-build-${name}-${Date.now()}`)
+    mkdirSync(tempDir, { recursive: true })
 
     try {
-      // Build slidev
+      // Copy slide markdown to temp dir
+      const tempMdPath = join(tempDir, 'slides.md')
+      await cp(inputPath, tempMdPath)
+
+      // Copy assets to temp dir if they exist
+      if (existsSync(assetsPath)) {
+        console.log(`  📁 Copying assets for ${name}...`)
+        await cp(assetsPath, join(tempDir, 'assets'), { recursive: true })
+      }
+
+      // Build slidev in temp directory
       execSync(
-        `pnpm exec slidev build "${inputPath}" --out "${outputPath}" --base /slides-export/${name}/`,
-        { stdio: 'inherit' }
+        `pnpm exec slidev build slides.md --out "${resolve(outputPath)}" --base /slides-export/${name}/`,
+        { 
+          stdio: 'inherit',
+          cwd: tempDir
+        }
       )
 
       console.log(`  ✅ ${name} built successfully\n`)
@@ -59,9 +68,9 @@ async function buildSlides() {
       process.exit(1)
     }
     finally {
-      // Clean up temporary assets
-      if (assetsCopied && existsSync(tempAssetsPath)) {
-        await rm(tempAssetsPath, { recursive: true, force: true })
+      // Clean up temp directory
+      if (existsSync(tempDir)) {
+        await rm(tempDir, { recursive: true, force: true })
       }
     }
   }
