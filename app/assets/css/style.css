@@ -42,7 +42,8 @@ html {
 
 #content:not(.unstyled),
 .markdown-rendered,
-[data-content-id^='content'] {
+[data-content-id^='content'],
+[data-content-id^='gm'] {
   --uno: 'text-neutral-700 dark:text-neutral-300';
 
   & hr {
@@ -50,6 +51,10 @@ html {
     --uno: 'border-neutral-500';
     --uno: 'border-dashed';
     --uno: 'w-80% mx-auto';
+
+    & + h2 {
+      --uno: 'hidden';
+    }
   }
 
   & p {
