@@ -52,12 +52,15 @@ const { data: home } = await useAsyncData('index', () => queryCollection('conten
           un-mb-3
         >
           <un-i-ph-chart-line-up-duotone un-text="3xl amber-500" />
-          <div un-text-xl un-font-semibold>
+          <div
+            un-text-xl
+            un-font-semibold
+          >
             Playground
           </div>
         </div>
         <div un-text="neutral-600 dark:neutral-400">
-          Interactive LSWT analysis tools including mutation detection 
+          Interactive LSWT analysis tools including mutation detection
           and segmentation visualization.
         </div>
       </NuxtLink>
@@ -80,12 +83,15 @@ const { data: home } = await useAsyncData('index', () => queryCollection('conten
           un-mb-3
         >
           <un-i-ph-book-open-duotone un-text="3xl teal-500" />
-          <div un-text-xl un-font-semibold>
+          <div
+            un-text-xl
+            un-font-semibold
+          >
             Documentation
           </div>
         </div>
         <div un-text="neutral-600 dark:neutral-400">
-          Learn about the methodology, algorithms, and how to use 
+          Learn about the methodology, algorithms, and how to use
           the analysis tools effectively.
         </div>
       </NuxtLink>
@@ -94,7 +100,6 @@ const { data: home } = await useAsyncData('index', () => queryCollection('conten
     <!-- Content Section -->
     <div
       v-if="home"
-      un-prose
       un-max-w-none
       un-mb-8
     >
@@ -119,8 +124,16 @@ const { data: home } = await useAsyncData('index', () => queryCollection('conten
         un-rounded
         un-bg="neutral-50 dark:neutral-800"
       >
-        <un-i-ph-graph un-text="2xl purple-500" un-mb-2 />
-        <div un-font-medium un-mb-1>Mutation Detection</div>
+        <un-i-ph-graph
+          un-text="2xl purple-500"
+          un-mb-2
+        />
+        <div
+          un-font-medium
+          un-mb-1
+        >
+          Mutation Detection
+        </div>
         <div un-text="sm neutral-500">
           Pettitt test, sequential t-test with OLS and Sen's slope
         </div>
@@ -130,8 +143,16 @@ const { data: home } = await useAsyncData('index', () => queryCollection('conten
         un-rounded
         un-bg="neutral-50 dark:neutral-800"
       >
-        <un-i-ph-scissors un-text="2xl rose-500" un-mb-2 />
-        <div un-font-medium un-mb-1>Segmentation</div>
+        <un-i-ph-scissors
+          un-text="2xl rose-500"
+          un-mb-2
+        />
+        <div
+          un-font-medium
+          un-mb-1
+        >
+          Segmentation
+        </div>
         <div un-text="sm neutral-500">
           Custom break years and statistical comparison
         </div>
@@ -141,8 +162,16 @@ const { data: home } = await useAsyncData('index', () => queryCollection('conten
         un-rounded
         un-bg="neutral-50 dark:neutral-800"
       >
-        <un-i-ph-presentation-chart un-text="2xl blue-500" un-mb-2 />
-        <div un-font-medium un-mb-1>Visualization</div>
+        <un-i-ph-presentation-chart
+          un-text="2xl blue-500"
+          un-mb-2
+        />
+        <div
+          un-font-medium
+          un-mb-1
+        >
+          Visualization
+        </div>
         <div un-text="sm neutral-500">
           Interactive Plotly charts with dark mode support
         </div>

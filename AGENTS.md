@@ -1,7 +1,7 @@
 # LSWT Playground - Project Knowledge Base
 
-**Stack:** Nuxt 3 + Nitro + Vue 3 + TypeScript + UnoCSS + Plotly.js  
-**Purpose:** Lake Surface Water Temperature analysis tool with mutation detection algorithms  
+**Stack:** Nuxt 3 + Nitro + Vue 3 + TypeScript + UnoCSS + Plotly.js
+**Purpose:** Lake Surface Water Temperature analysis tool with mutation detection algorithms
 **Entry:** [app/pages/index.vue](app/pages/index.vue) (docs), [app/pages/playground/index.vue](app/pages/playground/index.vue) (tool)
 
 ---

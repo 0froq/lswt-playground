@@ -12,8 +12,7 @@ const path = computed(() => {
 })
 
 const { data: doc } = await useAsyncData(path.value, () =>
-  queryCollection('content').path(path.value).first(),
-)
+  queryCollection('content').path(path.value).first())
 
 if (!doc.value) {
   throw createError({
@@ -66,7 +65,6 @@ useHead({
     <!-- Document Content -->
     <article
       v-if="doc"
-      un-prose
       un-max-w-none
     >
       <ContentRenderer :value="doc" />

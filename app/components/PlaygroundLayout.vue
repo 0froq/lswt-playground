@@ -1,4 +1,5 @@
-<script setup lang="ts">import type { LakeFactors } from '~/types/factor'
+<script setup lang="ts">
+import type { LakeFactors } from '~/types/factor'
 
 const props = defineProps<{
   title: string

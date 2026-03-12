@@ -84,7 +84,10 @@ const tools = [
           >
             <component :is="`un-i-${tool.icon}`" />
           </div>
-          <div un-text-2xl un-font-bold>
+          <div
+            un-text-2xl
+            un-font-bold
+          >
             {{ tool.title }}
           </div>
         </div>
@@ -108,9 +111,8 @@ const tools = [
             un-px-3
             un-py-1
             un-rounded-full
-            un-text="sm"
             un-bg="neutral-200 dark:neutral-700"
-            un-text="neutral-600 dark:neutral-300"
+            un-text="sm neutral-600 dark:neutral-300"
           >
             {{ feature }}
           </span>
