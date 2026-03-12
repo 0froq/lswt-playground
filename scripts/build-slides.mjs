@@ -33,27 +33,36 @@ async function buildSlides() {
     const inputPath = join(SLIDES_DIR, file)
     const outputPath = join(OUTPUT_DIR, name)
     const assetsPath = join(SLIDE_ASSETS_DIR, name)
+    const tempAssetsPath = join(SLIDES_DIR, 'assets')
 
     console.log(`📊 Building ${name}...`)
 
+    // Copy assets to content/slides/assets temporarily if they exist
+    let assetsCopied = false
+    if (existsSync(assetsPath)) {
+      console.log(`  📁 Copying assets for ${name}...`)
+      await cp(assetsPath, tempAssetsPath, { recursive: true, force: true })
+      assetsCopied = true
+    }
+
     try {
-      // Build slidev using pnpm exec
+      // Build slidev
       execSync(
-        `pnpm exec slidev build "${inputPath}" --base /slides-export/${name}/`,
+        `pnpm exec slidev build "${inputPath}" --out "${outputPath}" --base /slides-export/${name}/`,
         { stdio: 'inherit' }
       )
-
-      // Copy assets if they exist
-      if (existsSync(assetsPath)) {
-        console.log(`  📁 Copying assets for ${name}...`)
-        await cp(assetsPath, join(outputPath, 'assets'), { recursive: true })
-      }
 
       console.log(`  ✅ ${name} built successfully\n`)
     }
     catch (error) {
       console.error(`  ❌ Failed to build ${name}:`, error.message)
       process.exit(1)
+    }
+    finally {
+      // Clean up temporary assets
+      if (assetsCopied && existsSync(tempAssetsPath)) {
+        await rm(tempAssetsPath, { recursive: true, force: true })
+      }
     }
   }
 
