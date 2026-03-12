@@ -1,9 +1,9 @@
-Session.vim
+.session.vim
 .DS_Store
 .env
 
 # Font files (loaded from CDN)
-app/assets/fonts/
+public/assets/fonts/
 
 # Logs
 logs
