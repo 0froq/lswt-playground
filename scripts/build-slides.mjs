@@ -1,13 +1,13 @@
 #!/usr/bin/env node
 import { execSync } from 'node:child_process'
-import { existsSync, mkdirSync } from 'node:fs'
-import { readdir, cp, rm } from 'node:fs/promises'
-import { join, basename, resolve } from 'node:path'
-import { tmpdir } from 'node:os'
+import { existsSync, mkdirSync, readFileSync, writeFileSync } from 'node:fs'
+import { cp, readdir, rm } from 'node:fs/promises'
+import { basename, join } from 'node:path'
 
 const SLIDES_DIR = 'content/slides'
 const OUTPUT_DIR = 'public/slides-export'
 const SLIDE_ASSETS_DIR = 'public/slides-assets'
+const BUILD_DIR = '.slidev-build'
 
 async function buildSlides() {
   console.log('🔨 Building Slidev presentations...\n')
@@ -15,6 +15,11 @@ async function buildSlides() {
   // Create output directory
   if (!existsSync(OUTPUT_DIR)) {
     mkdirSync(OUTPUT_DIR, { recursive: true })
+  }
+
+  // Create build directory (not in public/)
+  if (!existsSync(BUILD_DIR)) {
+    mkdirSync(BUILD_DIR, { recursive: true })
   }
 
   // Clean old builds
@@ -34,48 +39,45 @@ async function buildSlides() {
     const inputPath = join(SLIDES_DIR, file)
     const outputPath = join(OUTPUT_DIR, name)
     const assetsPath = join(SLIDE_ASSETS_DIR, name)
+    const buildWorkDir = join(BUILD_DIR, name)
 
     console.log(`📊 Building ${name}...`)
 
-    // Create temp working directory
-    const tempDir = join(tmpdir(), `slidev-build-${name}-${Date.now()}`)
-    mkdirSync(tempDir, { recursive: true })
+    // Create work directory for this slide
+    if (!existsSync(buildWorkDir)) {
+      mkdirSync(buildWorkDir, { recursive: true })
+    }
 
     try {
-      // Create package.json in temp dir
-      const packageJson = {
-        name: `slidev-build-${name}`,
-        type: 'module',
-        dependencies: {
-          '@slidev/cli': '^52.2.5',
-          '@slidev/theme-default': 'latest',
-          'slidev-component-spotlight': '^1.1.0'
-        }
-      }
-      await import('node:fs/promises').then(fs => 
-        fs.writeFile(join(tempDir, 'package.json'), JSON.stringify(packageJson, null, 2))
+      // Read and process markdown file
+      let mdContent = readFileSync(inputPath, 'utf-8')
+      
+      // Replace relative asset paths with absolute paths
+      // ../assets/gm_XXXXXX_assets/ -> /slides-assets/gm-YYYY-MM-DD/
+      mdContent = mdContent.replace(
+        /\.\.\/assets\/gm_\d+_assets\//g, 
+        `/slides-assets/${name}/`
       )
+      
+      // Write processed markdown to work directory
+      writeFileSync(join(buildWorkDir, 'slides.md'), mdContent)
 
-      // Copy slide markdown to temp dir
-      const tempMdPath = join(tempDir, 'slides.md')
-      await cp(inputPath, tempMdPath)
+      // Create vite config to disable public dir
+      const viteConfig = `
+import { defineConfig } from 'vite'
 
-      // Copy assets to temp dir if they exist
-      if (existsSync(assetsPath)) {
-        console.log(`  📁 Copying assets for ${name}...`)
-        await cp(assetsPath, join(tempDir, 'assets'), { recursive: true })
-      }
+export default defineConfig({
+  publicDir: false,
+})
+`
+      writeFileSync(join(buildWorkDir, 'vite.config.ts'), viteConfig)
 
-      // Install dependencies
-      console.log(`  📦 Installing dependencies...`)
-      execSync('pnpm install', { cwd: tempDir, stdio: 'ignore' })
-
-      // Build slidev in temp directory
+      // Build slidev using project dependencies
       execSync(
-        `pnpm exec slidev build slides.md --out "${resolve(outputPath)}" --base /slides-export/${name}/`,
+        `pnpm exec slidev build slides.md --out "${outputPath}" --base /slides-export/${name}/`,
         { 
           stdio: 'inherit',
-          cwd: tempDir
+          cwd: buildWorkDir
         }
       )
 
@@ -86,11 +88,16 @@ async function buildSlides() {
       process.exit(1)
     }
     finally {
-      // Clean up temp directory
-      if (existsSync(tempDir)) {
-        await rm(tempDir, { recursive: true, force: true })
+      // Clean up work directory
+      if (existsSync(buildWorkDir)) {
+        await rm(buildWorkDir, { recursive: true, force: true })
       }
     }
+  }
+
+  // Clean up build directory
+  if (existsSync(BUILD_DIR)) {
+    await rm(BUILD_DIR, { recursive: true, force: true })
   }
 
   console.log('✨ All slides built successfully!')
