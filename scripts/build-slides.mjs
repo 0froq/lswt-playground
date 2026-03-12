@@ -37,9 +37,9 @@ async function buildSlides() {
     console.log(`📊 Building ${name}...`)
 
     try {
-      // Build slidev
+      // Build slidev using pnpm exec
       execSync(
-        `npx slidev build "${inputPath}" --out "${outputPath}" --base /slides-export/${name}/`,
+        `pnpm exec slidev build "${inputPath}" --base /slides-export/${name}/`,
         { stdio: 'inherit' }
       )
 
