@@ -74,6 +74,14 @@ definePageMeta({
         tooltip-text="Compare lake temperature across different time periods with custom break years."
         href="/playground/segments"
       />
+      <LinkUnderline
+        un-text="2xl"
+        un-before="bg-gradient-to-r from-purple-100 to-purple-500"
+        text="STL Decomposition"
+        :tooltip="true"
+        tooltip-text="Decompose time series into trend, seasonal, and remainder components using LOESS."
+        href="/playground/stl"
+      />
     </div>
   </div>
 </template>

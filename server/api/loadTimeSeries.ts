@@ -46,6 +46,13 @@ function parseWideCSVLocal(csvText: string, idColumn: string, agg: string = 'avg
     throw new Error('未检测到时间列头')
   timeColumns.sort((a, b) => a.t.getTime() - b.t.getTime())
 
+  // Check if no aggregation is requested (return monthly data as-is)
+  const noAggregation = agg === 'none'
+
+  if (noAggregation) {
+    return parseNoAggregation(lines, header, idIdx, latIdx, lonIdx, timeColumns, clipRange)
+  }
+
   // Group time columns by year (or season) for aggregation
   // Support seasonal aggregation: DJF (Dec-Jan-Feb), MAM (Mar-Apr-May), JJA (Jun-Jul-Aug), SON (Sep-Oct-Nov)
   const isSeasonal = /^(?:DJF|MAM|JJA|SON)$/i.test(agg)
@@ -187,10 +194,72 @@ function parseWideCSVLocal(csvText: string, idColumn: string, agg: string = 'avg
   return out
 }
 
+function parseNoAggregation(
+  lines: string[],
+  header: string[],
+  idIdx: number,
+  latIdx: number,
+  lonIdx: number,
+  timeColumns: { idx: number, t: Date }[],
+  clipRange: [number, number] | undefined,
+): TimeSeries[] {
+  const out: TimeSeries[] = []
+
+  for (let r = 1; r < lines.length; r++) {
+    const cols = splitCSVLine(lines[r] ?? '')
+    const id = cols[idIdx]
+    if (!id)
+      continue
+
+    let lat: number | undefined
+    let lon: number | undefined
+
+    if (latIdx >= 0 && lonIdx >= 0) {
+      const latRaw = cols[latIdx] ?? ''
+      const lonRaw = cols[lonIdx] ?? ''
+      const latN = Number(latRaw)
+      const lonN = Number(lonRaw)
+      if (!Number.isNaN(latN) && !Number.isNaN(lonN)) {
+        lat = latN
+        lon = lonN
+      }
+    }
+
+    if (lat === undefined || lon === undefined) {
+      const m = id.match(/(-?\d+(?:\.\d+)?)\s*[,_]\s*(-?\d+(?:\.\d+)?)/)
+      if (m) {
+        lat = Number(m[1])
+        lon = Number(m[2])
+      }
+    }
+
+    const points: { t: Date, v: number }[] = []
+    for (const tc of timeColumns) {
+      const raw = cols[tc.idx] ?? ''
+      const v = Number(raw)
+      if (!Number.isNaN(v)) {
+        // Apply clipRange filter if provided
+        if (clipRange) {
+          const [clipStartYear, clipEndYear] = clipRange
+          const year = tc.t.getFullYear()
+          if (year < clipStartYear || year > clipEndYear)
+            continue
+        }
+        points.push({ t: tc.t, v })
+      }
+    }
+
+    if (points.length)
+      out.push({ id, label: id, lat: lat ?? Number.NaN, lon: lon ?? Number.NaN, points })
+  }
+
+  return out
+}
+
 // GET /api/lakeTemp
 // Query:
 // - idColumn: string (required) -> CSV 首行的 id 列列头名
-// - agg: string (optional) -> 聚合方式（avg/min/max/var/range）
+// - agg: string (optional) -> 聚合方式（avg/min/max/var/range/none）
 // - csvPath: string (optional) -> CSV 文件路径，默认 public/lake_temperature.csv
 
 export default defineEventHandler(async (event) => {

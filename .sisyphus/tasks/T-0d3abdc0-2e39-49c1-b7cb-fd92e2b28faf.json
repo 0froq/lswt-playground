@@ -1,0 +1,9 @@
+{
+  "id": "T-0d3abdc0-2e39-49c1-b7cb-fd92e2b28faf",
+  "subject": "Trace data flow composables and API endpoints",
+  "description": "Map composables used by pages/components and linked server API endpoints involved in map + time series rendering.",
+  "status": "completed",
+  "blocks": [],
+  "blockedBy": [],
+  "threadID": "ses_31d21cfa5ffefpdgS3iyA4bHRD"
+}

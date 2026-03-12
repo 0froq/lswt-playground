@@ -1,0 +1,13 @@
+{
+  "id": "T-aabfa74d-3e43-49ce-8362-051b64cb7f96",
+  "subject": "Install LOESS dependency",
+  "description": "Add loess npm package for LOESS regression",
+  "status": "completed",
+  "blocks": [],
+  "blockedBy": [],
+  "metadata": {
+    "command": "pnpm add loess",
+    "priority": "high"
+  },
+  "threadID": "ses_31d221edbffeMa2Ho4PF5BX1sW"
+}

@@ -1,0 +1,13 @@
+{
+  "id": "T-2fac85c4-eba3-4dd8-97b7-be6e7ec9a7b6",
+  "subject": "Create STL page",
+  "description": "Create app/pages/playground/stl.vue main page",
+  "status": "completed",
+  "blocks": [],
+  "blockedBy": [],
+  "metadata": {
+    "file": "app/pages/playground/stl.vue",
+    "priority": "high"
+  },
+  "threadID": "ses_31d221edbffeMa2Ho4PF5BX1sW"
+}

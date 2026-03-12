@@ -1,0 +1,13 @@
+{
+  "id": "T-379e6a15-2236-4990-8585-dd8a86a0124f",
+  "subject": "Create STL decomposition API",
+  "description": "Create server API endpoint for STL decomposition with LOESS smoothing",
+  "status": "completed",
+  "blocks": [],
+  "blockedBy": [],
+  "metadata": {
+    "file": "server/api/decomposeSTL.ts",
+    "priority": "high"
+  },
+  "threadID": "ses_31d221edbffeMa2Ho4PF5BX1sW"
+}

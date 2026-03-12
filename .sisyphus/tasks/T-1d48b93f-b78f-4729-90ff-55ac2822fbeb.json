@@ -1,0 +1,13 @@
+{
+  "id": "T-1d48b93f-b78f-4729-90ff-55ac2822fbeb",
+  "subject": "Create STL map component",
+  "description": "Create StlMapView.vue component for map visualization with point selection",
+  "status": "completed",
+  "blocks": [],
+  "blockedBy": [],
+  "metadata": {
+    "file": "app/components/StlMapView.vue",
+    "priority": "high"
+  },
+  "threadID": "ses_31d221edbffeMa2Ho4PF5BX1sW"
+}

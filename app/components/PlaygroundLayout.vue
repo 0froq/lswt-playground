@@ -1,15 +1,11 @@
 <script setup lang="ts">
 import type { LakeFactors } from '~/types/factor'
 
-const props = defineProps<{
+defineProps<{
   title: string
-  theme: 'amber' | 'teal'
+  theme: 'amber' | 'teal' | 'purple'
   lakeFactors?: Map<string, LakeFactors>
 }>()
-
-const themeColor = computed(() => {
-  return props.theme === 'amber' ? 'amber-500' : 'teal-500'
-})
 </script>
 
 <template>

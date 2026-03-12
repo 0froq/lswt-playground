@@ -1,0 +1,13 @@
+{
+  "id": "T-878118f8-f2df-4db3-8bd0-0605422c3e5a",
+  "subject": "Update playground index",
+  "description": "Add STL link to playground index page",
+  "status": "completed",
+  "blocks": [],
+  "blockedBy": [],
+  "metadata": {
+    "file": "app/pages/playground/index.vue",
+    "priority": "medium"
+  },
+  "threadID": "ses_31d221edbffeMa2Ho4PF5BX1sW"
+}

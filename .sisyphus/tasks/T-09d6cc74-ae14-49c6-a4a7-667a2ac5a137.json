@@ -1,0 +1,13 @@
+{
+  "id": "T-09d6cc74-ae14-49c6-a4a7-667a2ac5a137",
+  "subject": "Push to GitHub",
+  "description": "Commit and push all changes to GitHub repository",
+  "status": "pending",
+  "blocks": [],
+  "blockedBy": [],
+  "metadata": {
+    "command": "git push",
+    "priority": "high"
+  },
+  "threadID": "ses_31d221edbffeMa2Ho4PF5BX1sW"
+}

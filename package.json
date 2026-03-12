@@ -38,6 +38,7 @@
     "release": "tsx scripts/release.mts"
   },
   "dependencies": {
+    "loess": "catalog:",
     "plotly.js-dist-min": "catalog:frontend"
   },
   "devDependencies": {
