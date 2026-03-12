@@ -80,6 +80,21 @@ export default defineNuxtConfig({
       crawlLinks: false,
       routes: ['/'],
     },
+    routeRules: {
+      // Allow iframe embedding for slides
+      '/slides-export/**': {
+        headers: {
+          'X-Frame-Options': 'SAMEORIGIN',
+        },
+      },
+    },
+    publicAssets: [
+      {
+        dir: 'public/slides-export',
+        baseURL: '/slides-export',
+        maxAge: 60 * 60 * 24 * 365,
+      },
+    ],
   },
 
   vite: {

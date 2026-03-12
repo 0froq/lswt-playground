@@ -4,10 +4,13 @@ definePageMeta({
 })
 
 const route = useRoute()
+const config = useRuntimeConfig()
+
+const slideNotFound = ref(false)
+const slideExists = ref(true)
 
 // Read all slide files from content/slides/
 const { data: slides } = await useAsyncData('slides', async () => {
-  // List all markdown files in content/slides
   const collection = await queryCollection('content')
     .where('stem', 'LIKE', 'slides/%')
     .order('stem', 'DESC')
@@ -61,6 +64,30 @@ const nextSlide = computed(() => {
   return slides.value[currentIndex.value + 1]
 })
 
+// Check if slide exists (only on client)
+async function checkSlideExists() {
+  if (!currentSlide.value || import.meta.server)
+    return
+  
+  try {
+    const response = await fetch(currentSlide.value.iframePath, { method: 'HEAD' })
+    slideExists.value = response.ok
+    if (!response.ok) {
+      slideNotFound.value = true
+    }
+  }
+  catch (error) {
+    slideExists.value = false
+    slideNotFound.value = true
+  }
+}
+
+watch(() => currentSlide.value, () => {
+  slideNotFound.value = false
+  slideExists.value = true
+  checkSlideExists()
+}, { immediate: true })
+
 useHead({
   title: currentSlide.value?.title || 'Group Meeting Slides',
 })
@@ -68,7 +95,7 @@ useHead({
 
 <template>
   <div un-w-full un-h-full>
-    <!-- Slide List (when no specific slide selected) -->
+    <!-- Slide List -->
     <div
       v-if="!($route.params as Record<string, string>).id"
       un-py-1
@@ -105,20 +132,19 @@ useHead({
             </div>
           </div>
           <div v-if="slide.title" un-text="neutral-600 dark:neutral-400" un-mt-2>
-            {{ slide.title }}
-          </div>
+            {{ slide.title }}</div>
         </NuxtLink>
       </div>
     </div>
 
-    <!-- Individual Slide View (iframe) -->
+    <!-- Individual Slide View -->
     <div
       v-else-if="currentSlide"
       un-w-full
       un-h="[calc(100vh-80px)]"
       un-flex="~ col"
     >
-      <!-- Slide Header -->
+      <!-- Header -->
       <div
         un-flex="~ row"
         un-justify-between
@@ -149,8 +175,8 @@ useHead({
           </div>
         </div>
 
-        <!-- Open in new tab -->
         <a
+          v-if="slideExists"
           :href="currentSlide.iframePath"
           target="_blank"
           un-flex="~ row"
@@ -168,18 +194,54 @@ useHead({
         </a>
       </div>
 
-      <!-- Slide Content (iframe) -->
+      <!-- Content: Iframe or Build Prompt -->
       <div un-flex-1 un-relative>
+        <!-- Build Prompt -->
+        <div
+          v-if="slideNotFound"
+          un-absolute
+          un-inset-0
+          un-flex="~ col"
+          un-items-center
+          un-justify-center
+          un-text="neutral-500"
+          un-p-8
+        >
+          <div un-text-6xl un-mb-4>🔨</div>
+          <div un-text-xl un-font-bold un-mb-2>Slides Not Built</div>
+          <div un-text-center un-max-w-md un-mb-6>
+            The slides need to be built before viewing. 
+            Run the following command in your terminal:
+          </div>
+          <div
+            un-bg="neutral-800"
+            un-text="neutral-100"
+            un-p-4
+            un-rounded
+            un-font-mono
+            un-text-sm
+            un-mb-6
+          >
+            pnpm build:slides
+          </div>
+          <div un-text="sm neutral-400">
+            After building, refresh this page.
+          </div>
+        </div>
+
+        <!-- Iframe -->
         <iframe
+          v-else
           :src="currentSlide.iframePath"
           un-w-full
           un-h-full
           un-border-0
           title="Slidev Presentation"
+          @error="slideNotFound = true"
         />
       </div>
 
-      <!-- Slide Navigation Footer -->
+      <!-- Footer -->
       <div
         un-px-4
         un-py-3
@@ -201,9 +263,7 @@ useHead({
         </NuxtLink>
         <span v-else />
 
-        <div un-text="sm neutral-500">
-          {{ currentIndex + 1 }} / {{ slides?.length }}
-        </div>
+        <div un-text="sm neutral-500">{{ currentIndex + 1 }} / {{ slides?.length }}</div>
 
         <NuxtLink
           v-if="nextSlide"
@@ -224,9 +284,7 @@ useHead({
     <div v-else un-py-1 un-max-w-800px un-mx-auto un-text-center>
       <div un-text="6xl neutral-300" un-mb-4>📊</div>
       <div un-text-2xl un-font-bold un-mb-2>Slide Not Found</div>
-      <div un-text="neutral-500" un-mb-6>
-        The slide you're looking for doesn't exist.
-      </div>
+      <div un-text="neutral-500" un-mb-6>The slide you're looking for doesn't exist.</div>
       <NuxtLink
         to="/slides"
         un-inline-flex
