@@ -4,10 +4,6 @@ definePageMeta({
 })
 
 const route = useRoute()
-const config = useRuntimeConfig()
-
-const slideNotFound = ref(false)
-const slideExists = ref(true)
 
 // Read all slide files from content/slides/
 const { data: slides } = await useAsyncData('slides', async () => {
@@ -34,7 +30,6 @@ const { data: slides } = await useAsyncData('slides', async () => {
       date,
       displayDate,
       path: `/slides/${stem}`,
-      iframePath: `/slides-export/${stem}/index.html`,
     }
   })
 })
@@ -64,30 +59,6 @@ const nextSlide = computed(() => {
   return slides.value[currentIndex.value + 1]
 })
 
-// Check if slide exists (only on client)
-async function checkSlideExists() {
-  if (!currentSlide.value || import.meta.server)
-    return
-  
-  try {
-    const response = await fetch(currentSlide.value.iframePath, { method: 'HEAD' })
-    slideExists.value = response.ok
-    if (!response.ok) {
-      slideNotFound.value = true
-    }
-  }
-  catch (error) {
-    slideExists.value = false
-    slideNotFound.value = true
-  }
-}
-
-watch(() => currentSlide.value, () => {
-  slideNotFound.value = false
-  slideExists.value = true
-  checkSlideExists()
-}, { immediate: true })
-
 useHead({
   title: currentSlide.value?.title || 'Group Meeting Slides',
 })
@@ -95,7 +66,7 @@ useHead({
 
 <template>
   <div un-w-full un-h-full>
-    <!-- Slide List -->
+    <!-- Slide List (when no specific slide selected) -->
     <div
       v-if="!($route.params as Record<string, string>).id"
       un-py-1
@@ -132,12 +103,13 @@ useHead({
             </div>
           </div>
           <div v-if="slide.title" un-text="neutral-600 dark:neutral-400" un-mt-2>
-            {{ slide.title }}</div>
+            {{ slide.title }}
+          </div>
         </NuxtLink>
       </div>
     </div>
 
-    <!-- Individual Slide View -->
+    <!-- Individual Slide View (Markdown) -->
     <div
       v-else-if="currentSlide"
       un-w-full
@@ -169,76 +141,22 @@ useHead({
           </NuxtLink>
           <div>
             <div un-font-medium>{{ currentSlide.displayDate }}</div>
-            <div v-if="currentSlide.title" un-text="sm neutral-500">
-              {{ currentSlide.title }}
-            </div>
+            <div v-if="currentSlide.title" un-text="sm neutral-500">{{ currentSlide.title }}</div>
           </div>
         </div>
-
-        <a
-          v-if="slideExists"
-          :href="currentSlide.iframePath"
-          target="_blank"
-          un-flex="~ row"
-          un-items-center
-          un-gap-2
-          un-px-3
-          un-py-1.5
-          un-rounded
-          un-text="sm"
-          un-bg="neutral-100 dark:neutral-800"
-          un-hover="bg-neutral-200 dark:bg-neutral-700"
-        >
-          <un-i-ph-export />
-          Open Fullscreen
-        </a>
       </div>
 
-      <!-- Content: Iframe or Build Prompt -->
-      <div un-flex-1 un-relative>
-        <!-- Build Prompt -->
-        <div
-          v-if="slideNotFound"
-          un-absolute
-          un-inset-0
-          un-flex="~ col"
-          un-items-center
-          un-justify-center
-          un-text="neutral-500"
-          un-p-8
+      <!-- Content -->
+      <div un-flex-1 un-overflow-auto un-p-8>
+        <article
+          v-if="currentSlide"
+          un-prose
+          un-prose-slate
+          un-dark:prose-invert
+          un-max-w-none
         >
-          <div un-text-6xl un-mb-4>🔨</div>
-          <div un-text-xl un-font-bold un-mb-2>Slides Not Built</div>
-          <div un-text-center un-max-w-md un-mb-6>
-            The slides need to be built before viewing. 
-            Run the following command in your terminal:
-          </div>
-          <div
-            un-bg="neutral-800"
-            un-text="neutral-100"
-            un-p-4
-            un-rounded
-            un-font-mono
-            un-text-sm
-            un-mb-6
-          >
-            pnpm build:slides
-          </div>
-          <div un-text="sm neutral-400">
-            After building, refresh this page.
-          </div>
-        </div>
-
-        <!-- Iframe -->
-        <iframe
-          v-else
-          :src="currentSlide.iframePath"
-          un-w-full
-          un-h-full
-          un-border-0
-          title="Slidev Presentation"
-          @error="slideNotFound = true"
-        />
+          <ContentRenderer :value="currentSlide" />
+        </article>
       </div>
 
       <!-- Footer -->

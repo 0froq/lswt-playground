@@ -25,11 +25,11 @@ useHead({
 
 @font-face {
   font-family: 'LXGW Bright Code TC';
-  src: url('assets/fonts/LXGWBrightCodeTC-ExtraLight.ttf');
+  src: url('fonts/LXGWBrightCodeTC-ExtraLight.ttf');
 }
 @font-face {
   font-family: 'LXGW Neo ZhiSong Plus';
-  src: url('assets/fonts/LXGWNeoZhiSongPlus.ttf');
+  src: url('fonts/LXGWNeoZhiSongPlus.ttf');
 }
 
 html,
