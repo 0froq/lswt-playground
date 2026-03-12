@@ -4,7 +4,6 @@
 <template>
   <div
     un-flex="~ col"
-    un-h-screen
     un-overflow-y-hidden
   >
     <header>

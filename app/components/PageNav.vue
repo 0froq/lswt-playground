@@ -18,7 +18,6 @@ function toggleDark() {
     un-justify-between
     un-p-4
     un-top-0
-    un-sticky
     un-z-100
   >
     <div
