@@ -39,6 +39,13 @@ catalogs:
     unocss:
       specifier: ^66.5.12
       version: 66.5.12
+  default:
+    '@iconify-json/openmoji':
+      specifier: ^1.2.23
+      version: 1.2.23
+    '@iconify-json/solar':
+      specifier: ^1.2.5
+      version: 1.2.5
   dev:
     '@antfu/eslint-config':
       specifier: ^6.7.3
@@ -169,12 +176,18 @@ importers:
       '@iconify-json/lucide':
         specifier: catalog:icons
         version: 1.2.82
+      '@iconify-json/openmoji':
+        specifier: 'catalog:'
+        version: 1.2.23
       '@iconify-json/ph':
         specifier: catalog:icons
         version: 1.2.2
       '@iconify-json/radix-icons':
         specifier: catalog:icons
         version: 1.2.6
+      '@iconify-json/solar':
+        specifier: 'catalog:'
+        version: 1.2.5
       '@iconify-json/tabler':
         specifier: catalog:icons
         version: 1.2.26
@@ -1426,11 +1439,17 @@ packages:
   '@iconify-json/lucide@1.2.82':
     resolution: {integrity: sha512-fHZWegspOZonl5GNTvOkHsjnTMdSslFh3EzpzUtRyLxO8bOonqk2OTU3hCl0k4VXzViMjqpRK3X1sotnuBXkFA==}
 
+  '@iconify-json/openmoji@1.2.23':
+    resolution: {integrity: sha512-ppgoydoehDJ08pEtuyYF+X1FXvbvAvOcFDI+Gtb+7o1SVxP7EbO2xMCDjY8aNW98a5PBs57PJuv1iopdV+75oA==}
+
   '@iconify-json/ph@1.2.2':
     resolution: {integrity: sha512-PgkEZNtqa8hBGjHXQa4pMwZa93hmfu8FUSjs/nv4oUU6yLsgv+gh9nu28Kqi8Fz9CCVu4hj1MZs9/60J57IzFw==}
 
   '@iconify-json/radix-icons@1.2.6':
     resolution: {integrity: sha512-izgVBJwk37dSvsma1QsRMfCWQ4FIImbBmJId1WUURzRZA5fFyKlCcG/nZC8se0KhOBWszo2mYgLmhKJv/DFPoA==}
+
+  '@iconify-json/solar@1.2.5':
+    resolution: {integrity: sha512-WMAiNwchU8zhfrySww6KQBRIBbsQ6SvgIu2yA+CHGyMima/0KQwT5MXogrZPJGoQF+1Ye3Qj6K+1CiyNn3YkoA==}
 
   '@iconify-json/tabler@1.2.26':
     resolution: {integrity: sha512-92G+ZD70AZgeJf07JfQzH+isnai6DwPcMBuF/qL1F+xAxdXCJzGd3w2RmsRvOmB+w1ImmWEEDms50QivQIjd6g==}
@@ -8606,11 +8625,19 @@ snapshots:
     dependencies:
       '@iconify/types': 2.0.0
 
+  '@iconify-json/openmoji@1.2.23':
+    dependencies:
+      '@iconify/types': 2.0.0
+
   '@iconify-json/ph@1.2.2':
     dependencies:
       '@iconify/types': 2.0.0
 
   '@iconify-json/radix-icons@1.2.6':
+    dependencies:
+      '@iconify/types': 2.0.0
+
+  '@iconify-json/solar@1.2.5':
     dependencies:
       '@iconify/types': 2.0.0
 

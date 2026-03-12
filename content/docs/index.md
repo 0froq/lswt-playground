@@ -3,29 +3,11 @@ title: Documentation
 description: Learn about LSWT analysis methodology and tools
 ---
 
-# Documentation
-
-Welcome to the LSWT Playground documentation.
-
-## Table of Contents
-
-### Getting Started
-- [Introduction](/docs/intro)
-- [Quick Start Guide](/docs/quickstart)
-- [Data Format](/docs/data-format)
-
-### Methodology
-- [Mutation Detection](/docs/mutation-detection)
-- [Segmentation Analysis](/docs/segmentation)
-- [Statistical Tests](/docs/statistical-tests)
-
-### API Reference
-- [API Overview](/docs/api)
-- [Time Series Endpoints](/docs/api/time-series)
-- [Mutation Detection](/docs/api/mutation)
+[[toc]]
 
 ### Presentations
-- [Overview Presentation](/slides/overview) - Interactive slide deck
+
+- [Presentation](/slides) - Interactive slide deck
 
 ---
 

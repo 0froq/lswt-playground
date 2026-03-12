@@ -46,6 +46,8 @@ export default defineConfig({
       collections: {
         carbon: () => import('@iconify-json/carbon/icons.json', { with: { type: 'json' } }).then(i => i.default as any),
         ph: () => import('@iconify-json/ph/icons.json', { with: { type: 'json' } }).then(i => i.default as any),
+        solar: () => import('@iconify-json/solar/icons.json', { with: { type: 'json' } }).then(i => i.default as any),
+        openmj: () => import('@iconify-json/openmoji/icons.json', { with: { type: 'json' } }).then(i => i.default as any),
       },
       scale: 1.2,
     }),

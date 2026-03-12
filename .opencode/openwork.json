@@ -1,0 +1,11 @@
+{
+  "version": 1,
+  "workspace": {
+    "name": "lswt-playground",
+    "createdAt": 1773323502334,
+    "preset": "starter"
+  },
+  "authorizedRoots": [
+    "/Users/oQ/1_projects/probe/lswt-playground"
+  ]
+}

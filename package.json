@@ -4,10 +4,11 @@
   "private": true,
   "packageManager": "pnpm@10.19.0",
   "scripts": {
-    "build": "nuxt build",
+    "build": "pnpm build:slides && nuxt build",
+    "build:slides": "node scripts/build-slides.mjs",
     "dev:pwa": "VITE_PLUGIN_PWA=true nuxt dev",
     "dev": "nuxt dev",
-    "generate": "nuxt generate",
+    "generate": "pnpm build:slides && nuxt generate",
     "prepare": "nuxt prepare && simple-git-hooks",
     "preview": "nuxt preview",
     "start": "node .output/server/index.mjs",
@@ -46,8 +47,10 @@
     "@commitlint/config-conventional": "catalog:quality",
     "@iconify-json/carbon": "catalog:icons",
     "@iconify-json/lucide": "catalog:icons",
+    "@iconify-json/openmoji": "catalog:",
     "@iconify-json/ph": "catalog:icons",
     "@iconify-json/radix-icons": "catalog:icons",
+    "@iconify-json/solar": "catalog:",
     "@iconify-json/tabler": "catalog:icons",
     "@iconify-json/twemoji": "catalog:icons",
     "@nuxt/content": "catalog:build",
@@ -83,7 +86,9 @@
     "unocss": "catalog:build",
     "vitest": "catalog:test",
     "vue": "catalog:frontend",
-    "vue-tsc": "catalog:dev"
+    "vue-tsc": "catalog:dev",
+    "@slidev/cli": "catalog:slidev",
+    "@slidev/theme-default": "catalog:slidev"
   },
   "resolutions": {
     "@nuxt/devtools": "catalog:build",

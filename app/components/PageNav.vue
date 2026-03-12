@@ -1,4 +1,6 @@
 <script setup lang="ts">
+import QNavCd from './QNavCd.vue'
+
 const color = useColorMode()
 useHead({
   meta: [{
@@ -10,6 +12,39 @@ useHead({
 function toggleDark() {
   color.preference = color.value === 'dark' ? 'light' : 'dark'
 }
+
+const navigationTree = [
+  {
+    label: 'Home',
+    url: '/',
+  },
+  {
+    label: 'Playground',
+    url: '/playground',
+    children: [
+      { label: 'Mutation', url: '/playground/mutation' },
+      { label: 'Segments', url: '/playground/segments' },
+    ],
+  },
+  {
+    label: 'Documentation',
+    url: '/docs',
+    children: [
+      {
+        label: 'Guide',
+        url: '/docs/guide',
+        children: [
+          { label: 'Quick Start', url: '/docs/guide/quickstart' },
+          { label: 'Advanced', url: '/docs/guide/advanced' },
+        ],
+      },
+    ],
+  },
+  {
+    label: 'Slides',
+    url: '/slides',
+  },
+]
 </script>
 
 <template>
@@ -34,6 +69,9 @@ function toggleDark() {
       un-gap-6
       un-text-xl
     >
+      <!-- Navigation Dropdown -->
+      <QNavCd :nav="navigationTree" />
+
       <a
         un-m-1
         un-h-6

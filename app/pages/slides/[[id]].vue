@@ -7,6 +7,7 @@ const route = useRoute()
 
 // Read all slide files from content/slides/
 const { data: slides } = await useAsyncData('slides', async () => {
+  // List all markdown files in content/slides
   const collection = await queryCollection('content')
     .where('stem', 'LIKE', 'slides/%')
     .order('stem', 'DESC')
@@ -30,12 +31,13 @@ const { data: slides } = await useAsyncData('slides', async () => {
       date,
       displayDate,
       path: `/slides/${stem}`,
+      iframePath: `/slides-export/${stem}/index.html`,
     }
   })
 })
 
 const currentIndex = computed(() => {
-  const id = route.params.id
+  const id = (route.params as Record<string, string>).id
   if (!id || !slides.value)
     return -1
   return slides.value.findIndex((s: any) => s.id === id)
@@ -65,35 +67,22 @@ useHead({
 </script>
 
 <template>
-  <div
-    un-w-full
-    un-h-full
-  >
+  <div un-w-full un-h-full>
     <!-- Slide List (when no specific slide selected) -->
     <div
-      v-if="!$route.params.id"
+      v-if="!($route.params as Record<string, string>).id"
       un-py-1
       un-max-w-800px
       un-mx-auto
     >
-      <div
-        un-text-3xl
-        un-my-6
-        un-font-bold
-      >
+      <div un-text-3xl un-my-6 un-font-bold>
         Group Meeting Slides
       </div>
-      <div
-        un-text="neutral-500"
-        un-mb-8
-      >
+      <div un-text="neutral-500" un-mb-8>
         Research presentations and progress reports from group meetings.
       </div>
 
-      <div
-        un-flex="~ col"
-        un-gap-4
-      >
+      <div un-flex="~ col" un-gap-4>
         <NuxtLink
           v-for="slide in slides"
           :key="slide.id"
@@ -106,41 +95,23 @@ useHead({
           un-hover="border-purple-500 bg-purple-50/10 dark:bg-purple-900/10"
           un-transition-all
         >
-          <div
-            un-flex="~ row"
-            un-items-center
-            un-gap-3
-            un-mb-2
-          >
+          <div un-flex="~ row" un-items-center un-gap-3 un-mb-2>
             <un-i-ph-presentation-chart un-text="2xl purple-500" />
             <div>
-              <div
-                un-text-xl
-                un-font-semibold
-              >
-                {{ slide.displayDate }}
-              </div>
-              <div
-                v-if="slide.description"
-                un-text="sm neutral-500"
-                un-mt-1
-              >
+              <div un-text-xl un-font-semibold>{{ slide.displayDate }}</div>
+              <div v-if="slide.description" un-text="sm neutral-500" un-mt-1>
                 {{ slide.description }}
               </div>
             </div>
           </div>
-          <div
-            v-if="slide.title"
-            un-text="neutral-600 dark:neutral-400"
-            un-mt-2
-          >
+          <div v-if="slide.title" un-text="neutral-600 dark:neutral-400" un-mt-2>
             {{ slide.title }}
           </div>
         </NuxtLink>
       </div>
     </div>
 
-    <!-- Individual Slide View -->
+    <!-- Individual Slide View (iframe) -->
     <div
       v-else-if="currentSlide"
       un-w-full
@@ -156,11 +127,7 @@ useHead({
         un-py-3
         un-border-b="1 neutral-200 dark:neutral-700"
       >
-        <div
-          un-flex="~ row"
-          un-items-center
-          un-gap-3
-        >
+        <div un-flex="~ row" un-items-center un-gap-3>
           <NuxtLink
             to="/slides"
             un-flex
@@ -175,31 +142,41 @@ useHead({
             <un-i-ph-arrow-left />
           </NuxtLink>
           <div>
-            <div un-font-medium>
-              {{ currentSlide.displayDate }}
-            </div>
-            <div
-              v-if="currentSlide.title"
-              un-text="sm neutral-500"
-            >
+            <div un-font-medium>{{ currentSlide.displayDate }}</div>
+            <div v-if="currentSlide.title" un-text="sm neutral-500">
               {{ currentSlide.title }}
             </div>
           </div>
         </div>
+
+        <!-- Open in new tab -->
+        <a
+          :href="currentSlide.iframePath"
+          target="_blank"
+          un-flex="~ row"
+          un-items-center
+          un-gap-2
+          un-px-3
+          un-py-1.5
+          un-rounded
+          un-text="sm"
+          un-bg="neutral-100 dark:neutral-800"
+          un-hover="bg-neutral-200 dark:bg-neutral-700"
+        >
+          <un-i-ph-export />
+          Open Fullscreen
+        </a>
       </div>
 
-      <!-- Slide Content Rendered with Nuxt Content -->
-      <div
-        un-flex-1
-        un-overflow-auto
-        un-p-8
-      >
-        <article
-          v-if="currentSlide"
-          un-max-w-none
-        >
-          <ContentRenderer :value="currentSlide" />
-        </article>
+      <!-- Slide Content (iframe) -->
+      <div un-flex-1 un-relative>
+        <iframe
+          :src="currentSlide.iframePath"
+          un-w-full
+          un-h-full
+          un-border-0
+          title="Slidev Presentation"
+        />
       </div>
 
       <!-- Slide Navigation Footer -->
@@ -244,30 +221,10 @@ useHead({
     </div>
 
     <!-- Not Found -->
-    <div
-      v-else
-      un-py-1
-      un-max-w-800px
-      un-mx-auto
-      un-text-center
-    >
-      <div
-        un-text="6xl neutral-300"
-        un-mb-4
-      >
-        📊
-      </div>
-      <div
-        un-text-2xl
-        un-font-bold
-        un-mb-2
-      >
-        Slide Not Found
-      </div>
-      <div
-        un-text="neutral-500"
-        un-mb-6
-      >
+    <div v-else un-py-1 un-max-w-800px un-mx-auto un-text-center>
+      <div un-text="6xl neutral-300" un-mb-4>📊</div>
+      <div un-text-2xl un-font-bold un-mb-2>Slide Not Found</div>
+      <div un-text="neutral-500" un-mb-6>
         The slide you're looking for doesn't exist.
       </div>
       <NuxtLink

@@ -1,11 +1,11 @@
 <script setup lang="ts">
-definePageMeta({
-  layout: 'default',
-})
+import { useRoute } from '#app'
 
 const route = useRoute()
+const params = route.params as { slug?: string | string[] }
+
 const path = computed(() => {
-  const slug = route.params.slug
+  const slug = params.slug
   if (Array.isArray(slug))
     return `/docs/${slug.join('/')}`
   return '/docs'
@@ -27,6 +27,8 @@ useHead({
     { name: 'description', content: doc.value?.description },
   ],
 })
+
+const page = await queryCollection('content').path(route.path).first()
 </script>
 
 <template>
@@ -56,19 +58,27 @@ useHead({
       >
         Docs
       </NuxtLink>
-      <template v-if="$route.params.slug">
+      <template v-if="params.slug">
         <span>/</span>
-        <span un-capitalize>{{ $route.params.slug?.[$route.params.slug.length - 1] }}</span>
+        <span un-capitalize>{{ params.slug?.[params.slug.length - 1] }}</span>
       </template>
     </div>
 
     <!-- Document Content -->
-    <article
+    <div
       v-if="doc"
-      un-max-w-none
+      un-relative
+      un-min-h-screen
     >
+      <div
+        un-text-4xl
+        un-font="bold script"
+        un-mb-4
+      >
+        {{ doc.title }}
+      </div>
       <ContentRenderer :value="doc" />
-    </article>
+    </div>
 
     <!-- Navigation Footer -->
     <div

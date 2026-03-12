@@ -62,7 +62,7 @@ html {
     --uno: 'my-10 w-fit relative block font-normal';
     /* different color for light and dark mode */
     --uno: 'text-neutral-800 dark:text-neutral-200';
-    --uno: 'before:(opacity-0 absolute -translate-x-[150%] text-[0.8em] transiton-opacity duration-200)';
+    --uno: 'before:(opacity-0 absolute translate-[-150%,0] text-[0.8em] transiton-opacity duration-200)';
     --uno: 'hover:(before:opacity-40)';
   }
 

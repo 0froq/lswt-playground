@@ -10,8 +10,9 @@ useHead({
 <template>
   <NuxtLayout
     un-text="neutral-700 dark:neutral-300"
-    un-bg="neutral-100 dark:neutral-900"
+    un-bg="neutral-50 dark:neutral-950"
     un-font-serif
+    un-min-h-100vh
   >
     <NuxtPage />
   </NuxtLayout>

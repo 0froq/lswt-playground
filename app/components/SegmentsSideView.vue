@@ -214,7 +214,6 @@ watchEffect(
 <template>
   <div
     class="side-view"
-    un-w="1/4"
     un-min-w-200px
     un-px-4
     un-flex="~ col"

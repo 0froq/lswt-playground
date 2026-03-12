@@ -114,6 +114,9 @@ pnpm preview
 
 We use **Conventional Commits** with the following types:
 
+> [!NOTE] Attention:
+> No `chore` allowed. Use `build` for build-related changes and `ci` for CI/CD changes instead.
+
 - `feat`: New feature
 - `fix`: Bug fix
 - `docs`: Documentation changes
@@ -123,7 +126,6 @@ We use **Conventional Commits** with the following types:
 - `test`: Adding or updating tests
 - `build`: Build system changes
 - `ci`: CI/CD changes
-- `chore`: Other changes
 
 #### Pre-commit Hooks
 
