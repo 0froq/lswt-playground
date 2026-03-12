@@ -42,6 +42,20 @@ async function buildSlides() {
     mkdirSync(tempDir, { recursive: true })
 
     try {
+      // Create package.json in temp dir
+      const packageJson = {
+        name: `slidev-build-${name}`,
+        type: 'module',
+        dependencies: {
+          '@slidev/cli': '^52.2.5',
+          '@slidev/theme-default': 'latest',
+          'slidev-component-spotlight': '^1.1.0'
+        }
+      }
+      await import('node:fs/promises').then(fs => 
+        fs.writeFile(join(tempDir, 'package.json'), JSON.stringify(packageJson, null, 2))
+      )
+
       // Copy slide markdown to temp dir
       const tempMdPath = join(tempDir, 'slides.md')
       await cp(inputPath, tempMdPath)
@@ -51,6 +65,10 @@ async function buildSlides() {
         console.log(`  📁 Copying assets for ${name}...`)
         await cp(assetsPath, join(tempDir, 'assets'), { recursive: true })
       }
+
+      // Install dependencies
+      console.log(`  📦 Installing dependencies...`)
+      execSync('pnpm install', { cwd: tempDir, stdio: 'ignore' })
 
       // Build slidev in temp directory
       execSync(
