@@ -1,22 +1,22 @@
 export interface STLResult {
-  /** Original time series values */
   original: number[]
-  /** Trend component */
   trend: number[]
-  /** Seasonal component */
   seasonal: number[]
-  /** Remainder (residual) component */
   remainder: number[]
-  /** Lake identifier */
   lakeId: string
-  /** Lake label */
   label: string
-  /** Lake latitude */
   lat: number
-  /** Lake longitude */
   lon: number
-  /** Time points (dates) */
   time: Date[]
+  weights?: number[]
+  diagnostics?: {
+    innerIterations: number
+    outerIterations: number
+    robust: boolean
+    finalMAD: number
+    lowWeightCount: number
+    weightRange: [number, number]
+  }
 }
 
 export interface STLParams {

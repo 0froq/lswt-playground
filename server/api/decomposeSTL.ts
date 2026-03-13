@@ -1,17 +1,37 @@
 import type { TimeSeries } from '~/types/mutation'
 import type { STLResult } from '~/types/stl'
+import { stl, createConfigFromParams, spanToWindow } from '../utils/stl'
 
 interface STLRequest {
   series: TimeSeries[]
   seasonalPeriod?: number
   seasonalSpan?: number
   trendSpan?: number
+  seasonalWindow?: number
+  trendWindow?: number
+  innerIterations?: number
+  outerIterations?: number
+  robust?: boolean
+  skipLowPass?: boolean
+  skipFinishingLoop?: boolean
 }
 
 export default defineEventHandler(async (event) => {
   try {
     const body = await readBody(event) as STLRequest
-    const { series, seasonalPeriod = 12, seasonalSpan = 0.15, trendSpan = 0.25 } = body
+    const {
+      series,
+      seasonalPeriod = 12,
+      seasonalSpan,
+      trendSpan,
+      seasonalWindow,
+      trendWindow,
+      innerIterations = 2,
+      outerIterations = 0,
+      robust = false,
+      skipLowPass = false,
+      skipFinishingLoop = false,
+    } = body
 
     if (!series || !Array.isArray(series) || series.length === 0) {
       return {
@@ -20,10 +40,24 @@ export default defineEventHandler(async (event) => {
       }
     }
 
+    const useFixedWindow = seasonalWindow !== undefined && trendWindow !== undefined
+
     const results: STLResult[] = []
 
     for (const ts of series) {
-      const result = decomposeSTL(ts, seasonalPeriod, seasonalSpan, trendSpan)
+      const result = decomposeSTL(ts, {
+        period: seasonalPeriod,
+        seasonalSpan: seasonalSpan ?? 0.15,
+        trendSpan: trendSpan ?? 0.25,
+        seasonalWindow,
+        trendWindow,
+        useFixedWindow,
+        innerIterations,
+        outerIterations,
+        robust,
+        skipLowPass,
+        skipFinishingLoop,
+      })
       results.push(result)
     }
 
@@ -40,122 +74,84 @@ export default defineEventHandler(async (event) => {
   }
 })
 
+interface STLDecomposeParams {
+  period: number
+  seasonalSpan: number
+  trendSpan: number
+  seasonalWindow?: number
+  trendWindow?: number
+  useFixedWindow: boolean
+  innerIterations: number
+  outerIterations: number
+  robust: boolean
+  skipLowPass: boolean
+  skipFinishingLoop: boolean
+}
+
+function resolveWindowLength(
+  useFixed: boolean,
+  fixedValue: number | undefined,
+  spanValue: number,
+  n: number,
+): number {
+  if (useFixed && fixedValue !== undefined) {
+    return Math.max(7, fixedValue % 2 === 0 ? fixedValue + 1 : fixedValue)
+  }
+  return spanToWindow(spanValue, n)
+}
+
 function decomposeSTL(
   series: TimeSeries,
-  seasonalPeriod: number,
-  seasonalSpan: number,
-  trendSpan: number,
+  params: STLDecomposeParams,
 ): STLResult {
   const values = series.points.map(p => p.v)
   const times = series.points.map(p => new Date(p.t))
   const n = values.length
 
-  if (n < seasonalPeriod * 2) {
+  if (n < params.period * 2) {
     return createEmptyResult(series, times)
   }
 
-  let trend = Array.from({ length: n }, () => 0)
-  let seasonal = Array.from({ length: n }, () => 0)
-  const detrended = Array.from({ length: n }, () => 0)
-  const remainder = Array.from({ length: n }, () => 0)
+  const seasonalWindow = resolveWindowLength(
+    params.useFixedWindow,
+    params.seasonalWindow,
+    params.seasonalSpan,
+    n,
+  )
 
-  const seasonalLength = Math.round(seasonalSpan * n)
-  const trendLength = Math.round(trendSpan * n)
+  const trendWindow = resolveWindowLength(
+    params.useFixedWindow,
+    params.trendWindow,
+    params.trendSpan,
+    n,
+  )
 
-  const detrendedValues = [...values]
+  const config = createConfigFromParams({
+    period: params.period,
+    seasonalWindow,
+    trendWindow,
+    innerIterations: params.innerIterations,
+    outerIterations: params.outerIterations,
+    robust: params.robust,
+    skipLowPass: params.skipLowPass,
+    skipFinishingLoop: params.skipFinishingLoop,
+  })
 
-  for (let iter = 0; iter < 2; iter++) {
-    for (let i = 0; i < n; i++) {
-      detrended[i] = detrendedValues[i] - trend[i]
-    }
-
-    seasonal = extractSeasonal(detrended, seasonalPeriod, seasonalLength)
-
-    const deseasonalized: number[] = Array.from({ length: n }, () => 0)
-    for (let i = 0; i < n; i++) {
-      deseasonalized[i] = detrendedValues[i] - seasonal[i]
-    }
-
-    trend = smoothTrend(deseasonalized, trendLength)
-  }
-
-  for (let i = 0; i < n; i++) {
-    remainder[i] = values[i] - trend[i] - seasonal[i]
-  }
+  const result = stl(values, config)
 
   return {
-    original: values,
-    trend,
-    seasonal,
-    remainder,
+    original: result.original,
+    trend: result.trend,
+    seasonal: result.seasonal,
+    remainder: result.remainder,
     lakeId: series.id,
     label: series.label,
     lat: series.lat,
     lon: series.lon,
     time: times,
+    diagnostics: result.diagnostics,
+    weights: result.weights,
   }
-}
-
-function extractSeasonal(detrended: number[], period: number, windowLen: number): number[] {
-  const n = detrended.length
-  const seasonal = Array.from({ length: n }, () => 0)
-  const subseriesMeans: number[][] = Array.from({ length: period }, () => [])
-
-  for (let i = 0; i < n; i++) {
-    const phase = i % period
-    subseriesMeans[phase].push(detrended[i])
-  }
-
-  const seasonalPattern = Array.from({ length: period }, () => 0)
-  for (let p = 0; p < period; p++) {
-    if (subseriesMeans[p].length > 0) {
-      seasonalPattern[p] = mean(subseriesMeans[p])
-    }
-  }
-
-  for (let i = 0; i < n; i++) {
-    const phase = i % period
-    seasonal[i] = seasonalPattern[phase]
-  }
-
-  return lowessSmooth(seasonal, Math.min(windowLen, Math.floor(n / 4)))
-}
-
-function smoothTrend(deseasonalized: number[], windowLen: number): number[] {
-  return lowessSmooth(deseasonalized, windowLen)
-}
-
-function lowessSmooth(y: number[], windowLen: number): number[] {
-  const n = y.length
-  const smoothed = Array.from({ length: n }, () => 0)
-  const halfWindow = Math.max(1, Math.floor(windowLen / 2))
-
-  for (let i = 0; i < n; i++) {
-    let sumWeights = 0
-    let sumWeightedY = 0
-
-    const start = Math.max(0, i - halfWindow)
-    const end = Math.min(n - 1, i + halfWindow)
-
-    for (let j = start; j <= end; j++) {
-      const distance = Math.abs(i - j) / (halfWindow + 1)
-      const weight = (1 - distance ** 3) ** 3
-      sumWeights += weight
-      sumWeightedY += weight * y[j]
-    }
-
-    smoothed[i] = sumWeights > 0
-      ? sumWeightedY / sumWeights
-      : y[i]
-  }
-
-  return smoothed
-}
-
-function mean(arr: number[]): number {
-  if (arr.length === 0)
-    return 0
-  return arr.reduce((sum, val) => sum + val, 0) / arr.length
 }
 
 function createEmptyResult(series: TimeSeries, times: Date[]): STLResult {
