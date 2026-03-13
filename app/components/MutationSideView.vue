@@ -1,5 +1,6 @@
 <script setup lang="ts">
-import type { Break, LakePoint, MutationPoint, TimeSeries } from '~/types/mutation'
+import type { LakePoint, MutationPoint, TimeSeries } from '~/types/mutation'
+import type { Break } from '~/types/segments'
 import type {
   ParamsData,
   ParamsMutation,
