@@ -7,6 +7,7 @@ const props = defineProps<{
   metric: 'mean' | 'slope' | 'std'
   yAxisTitle: string
   color?: string // Main color for this cluster/global
+  selectedWindowSizes?: number[] // Filter by window sizes (optional)
 }>()
 
 // Cluster colors for reference
@@ -38,8 +39,18 @@ const windowSizeOpacities: Record<number, number> = {
   15: 1.0,
 }
 
-// Filter to only the specified metric
-const filteredFeatures = computed(() => props.data.filter(f => f.metric === props.metric))
+// Filter to only the specified metric and window sizes
+const filteredFeatures = computed(() => {
+  return props.data.filter((f) => {
+    const metricMatch = f.metric === props.metric
+    if (!metricMatch) return false
+    // If selectedWindowSizes is provided, filter by it; otherwise show all
+    if (props.selectedWindowSizes && props.selectedWindowSizes.length > 0) {
+      return props.selectedWindowSizes.includes(f.windowSize)
+    }
+    return true
+  })
+})
 
 // Convert hex to rgba with opacity
 function hexToRgba(hex: string, alpha: number): string {

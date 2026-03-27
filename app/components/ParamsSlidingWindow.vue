@@ -53,7 +53,10 @@ function toggleWindowSize(size: number) {
       label-text="Window Sizes (years)"
     >
       <template #value>
-        <div un-flex="~ wrap" un-gap-2>
+        <div
+          un-flex="~ wrap"
+          un-gap-2
+        >
           <button
             v-for="size in windowSizeOptions"
             :key="size"

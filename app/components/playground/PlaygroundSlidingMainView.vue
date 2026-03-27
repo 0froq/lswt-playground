@@ -2,12 +2,14 @@
 import type { LakePoint } from '~/types/mutation'
 import type { SlidingWindowAnalysisResponse } from '~/types/sliding'
 import type { SpatialClusteringResponse } from '~/types/clustering'
+import type { ParamsSlidingWindow } from '~/types/param'
 
 const props = defineProps<{
   points?: LakePoint[]
   slidingAnalysis?: SlidingWindowAnalysisResponse
   clusteringAnalysis?: SpatialClusteringResponse
   rawSeries?: any[] // Raw time series data
+  paramsSliding?: ParamsSlidingWindow
 }>()
 
 // Unified selection model - all components bind to this
@@ -17,6 +19,18 @@ const poi = defineModel<string | undefined>('poi')
 const selectedMetric = ref<'mean' | 'std' | 'slope'>('mean')
 const selectedWindowSizeStr = ref<string>('9')
 const selectedCenterYearStr = ref<string>('2000')
+
+// Use windowSizes from paramsSliding if provided, otherwise default
+const windowSizes = computed(() => props.paramsSliding?.windowSizes ?? [5, 9, 13])
+
+// Sync with paramsSliding when available
+watch(() => props.paramsSliding, (params) => {
+  if (params) {
+    selectedMetric.value = params.selectedMetric
+    selectedWindowSizeStr.value = String(params.selectedWindowSize)
+    selectedCenterYearStr.value = String(params.selectedCenterYear)
+  }
+}, { immediate: true })
 
 const selectedWindowSize = computed(() => Number(selectedWindowSizeStr.value))
 const selectedCenterYear = computed(() => Number(selectedCenterYearStr.value))
@@ -154,6 +168,7 @@ const selectedLakeSlidingFeatures = computed(() => {
         title="Global Mean"
         metric="mean"
         y-axis-title="°C"
+        :selected-window-sizes="windowSizes"
       />
       <SlidingWindowSingleMetric
         v-for="cluster in clusteringAnalysis?.clusters"
@@ -163,6 +178,7 @@ const selectedLakeSlidingFeatures = computed(() => {
         metric="mean"
         y-axis-title="°C"
         :color="getClusterColor(cluster.clusterId)"
+        :selected-window-sizes="windowSizes"
       />
     </div>
 
@@ -175,6 +191,7 @@ const selectedLakeSlidingFeatures = computed(() => {
         title="Global Slope"
         metric="slope"
         y-axis-title="°C/year"
+        :selected-window-sizes="windowSizes"
       />
       <SlidingWindowSingleMetric
         v-for="cluster in clusteringAnalysis?.clusters"
@@ -184,6 +201,7 @@ const selectedLakeSlidingFeatures = computed(() => {
         metric="slope"
         y-axis-title="°C/year"
         :color="getClusterColor(cluster.clusterId)"
+        :selected-window-sizes="windowSizes"
       />
     </div>
 
@@ -196,6 +214,7 @@ const selectedLakeSlidingFeatures = computed(() => {
         title="Global Std"
         metric="std"
         y-axis-title="°C"
+        :selected-window-sizes="windowSizes"
       />
       <SlidingWindowSingleMetric
         v-for="cluster in clusteringAnalysis?.clusters"
@@ -205,6 +224,7 @@ const selectedLakeSlidingFeatures = computed(() => {
         metric="std"
         y-axis-title="°C"
         :color="getClusterColor(cluster.clusterId)"
+        :selected-window-sizes="windowSizes"
       />
     </div>
   </div>

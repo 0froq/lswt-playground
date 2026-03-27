@@ -9,6 +9,7 @@ const rawSeries = ref<any[] | undefined>(undefined)
 const slidingAnalysis = ref<SlidingWindowAnalysisResponse | undefined>(undefined)
 const clusteringAnalysis = ref<SpatialClusteringResponse | undefined>(undefined)
 const dataset = ref<string | undefined>(undefined)
+const paramsSliding = ref<any | undefined>(undefined)
 
 const { lakeFactorsMap, loadFactors } = useLakeFactors()
 
@@ -31,6 +32,7 @@ watchEffect(async () => {
         @update:raw-series="rawSeries = $event"
         @update:sliding-analysis="slidingAnalysis = $event"
         @update:clustering-analysis="clusteringAnalysis = $event"
+        @update:params-sliding="paramsSliding = $event"
       />
     </template>
 
@@ -41,6 +43,7 @@ watchEffect(async () => {
         :raw-series="rawSeries"
         :sliding-analysis="slidingAnalysis"
         :clustering-analysis="clusteringAnalysis"
+        :params-sliding="paramsSliding"
       />
     </template>
   </PlaygroundLayout>

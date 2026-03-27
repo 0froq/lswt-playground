@@ -9,6 +9,7 @@ const emit = defineEmits<{
   (e: 'update:rawSeries', series: any[]): void
   (e: 'update:slidingAnalysis', analysis: SlidingWindowAnalysisResponse): void
   (e: 'update:clusteringAnalysis', analysis: SpatialClusteringResponse): void
+  (e: 'update:paramsSliding', params: ParamsSlidingWindow): void
 }>()
 
 const poiModel = defineModel<string | undefined>('poi')
@@ -26,6 +27,11 @@ const paramsSliding = ref<ParamsSlidingWindow>({
   selectedWindowSize: 9,
   selectedCenterYear: 2000,
 })
+
+// Emit paramsSliding when it changes
+watch(paramsSliding, (newParams) => {
+  emit('update:paramsSliding', newParams)
+}, { immediate: true, deep: true })
 
 // Clustering params
 const paramsClustering = ref<ParamsClustering>({
@@ -88,20 +94,14 @@ watchEffect(async () => {
 })
 
 // Fetch clustering analysis when raw series, clustering params, or window sizes change
-watch([
-  rawSeries,
-  () => paramsClustering.value.clusterCount,
-  () => paramsClustering.value.coordinateWeight,
-  () => paramsClustering.value.bandMode,
-  () => paramsSliding.value.windowSizes,
-], async ([newRawSeries]) => {
-  if (!newRawSeries?.length) return
+watchEffect(async () => {
+  if (!rawSeries.value?.length) return
 
   try {
     const response = await $fetch('/api/spatialClustering', {
       method: 'POST',
       body: {
-        rawSeries: newRawSeries,
+        rawSeries: rawSeries.value,
         clusterCount: paramsClustering.value.clusterCount,
         coordinateWeight: paramsClustering.value.coordinateWeight,
         bandMode: paramsClustering.value.bandMode,
@@ -114,7 +114,7 @@ watch([
   catch (e) {
     console.error('Spatial clustering failed:', e)
   }
-}, { immediate: true })
+})
 
 // Get selected lake's sliding features for display (per-lake, not global)
 const selectedLakeSlidingFeatures = computed(() => {
