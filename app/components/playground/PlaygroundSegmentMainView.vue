@@ -32,16 +32,6 @@ const poi = defineModel<string | undefined>('poi')
       :breaks="props.breaks"
     />
     <QSeperator
-      title="Segment Factor Matrix"
-      un-text="teal-500"
-    />
-    <SegmentFactorMatrix
-      :points="props.points"
-      :segments="props.segments"
-      :breaks="props.breaks"
-      :lake-factors="props.lakeFactors"
-    />
-    <QSeperator
       title="Segment Distribution"
       un-text="teal-500"
     />

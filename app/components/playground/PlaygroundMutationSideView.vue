@@ -12,131 +12,75 @@ const emit = defineEmits<{
   (e: 'update:mutationPoints', mutationPoints: MutationPoint[]): void
 }>()
 
-const poi = defineModel('poi')
-const dataset = defineModel('dataset')
-const tCandidates = ref<number[] | undefined>(undefined)
-const mutationPoints = ref<MutationPoint[] | undefined>(undefined)
-const rawSeries = ref<TimeSeries[] | undefined>(undefined)
-const processedSeries = ref<TimeSeries[] | undefined>(undefined)
+const poiModel = defineModel<string | undefined>('poi')
+const dataset = defineModel<string | undefined>('dataset')
 
-onMounted(async () => {
-  const params = new URLSearchParams()
-  if (dataset?.value)
-    params.append('dataset', String(dataset.value))
-  const _rawSeries = await $fetch(`/api/loadTimeSeries?${params.toString()}`)
-    .then(res => res.series as TimeSeries[])
-    .catch((e) => {
-      console.error('Failed to load time series data:', e)
-      return new Array<TimeSeries>()
-    })
-
-  if (_rawSeries && _rawSeries.length !== 0) {
-    tCandidates.value = _rawSeries[0]?.points.map(
-      (p: { t: Date, v: number }) => new Date(p.t).getFullYear(),
-    ) || []
-  }
-})
-const poiCandidates = computed<string[] | undefined>(() => {
-  if (!rawSeries.value || rawSeries.value.length === 0)
-    return undefined
-  return rawSeries.value.map((series: TimeSeries) => series.label) || []
-})
-
-const paramsData = ref<{
-  agg: string
-  clipRange?: [number, number]
-  dataset?: string
-}>({
+// 参数状态
+const paramsData = ref<ParamsData>({
   agg: 'avg',
 })
 
-const paramsPreprocess = ref<{
-  smoothWindow: number
-  diffOrder: number
-}>({
+const paramsPreprocess = ref<ParamsPreprocess>({
   smoothWindow: 1,
   diffOrder: 1,
 })
 
-const paramsMutation = ref<{
-  mutationMethod: string
-  minSegLen: number
-}>({
+const paramsMutation = ref<ParamsMutation>({
   mutationMethod: 'pettitt',
   minSegLen: 5,
 })
 
-const mutationThisId = computed<MutationPoint | undefined>(() => {
-  if (!mutationPoints.value || mutationPoints.value.length === 0 || !poi.value)
-    return undefined
-  const mp = mutationPoints.value.find(
-    mp => mp.lakeId === poi.value,
-  )
-  return mp
+// 使用共享 composables
+const { rawSeries, processedSeries, points } = usePlaygroundData({
+  paramsData,
+  paramsPreprocess,
+  dataset,
 })
+
+const { poi, poiCandidates, tCandidates, selectedSeries } = usePlaygroundPoi({
+  rawSeries,
+})
+
+// 同步 poi v-model
+watch(poi, (newVal) => {
+  poiModel.value = newVal
+}, { immediate: true })
+
+watch(poiModel, (newVal) => {
+  if (newVal !== poi.value) {
+    poi.value = newVal
+  }
+})
+
+// 监听 points 变化，emit 给父组件
+watch(points, (newPoints) => {
+  if (newPoints) {
+    emit('update:points', newPoints)
+  }
+}, { immediate: true })
+
+// Mutation 检测状态
+const mutationPoints = ref<MutationPoint[] | undefined>(undefined)
+
+const mutationThisId = computed<MutationPoint | undefined>(() => {
+  if (!mutationPoints.value?.length || !poi.value)
+    return undefined
+  return mutationPoints.value.find(mp => mp.lakeId === poi.value)
+})
+
 const breaksForPoi = computed<Break[] | undefined>(() => {
   if (!mutationPoints.value || !poi.value)
     return undefined
-  return (mutationPoints.value.filter(mp => mp.lakeId === poi.value) as unknown) as Break[]
+  return mutationPoints.value.filter(mp => mp.lakeId === poi.value) as unknown as Break[]
 })
+
+// 数据参数更新处理
 function handleDataParamsUpdate(params: ParamsData) {
-  console.warn('Data params updated:', params)
   paramsData.value = params
   dataset.value = params.dataset
 }
 
-watchEffect(
-  async () => {
-    const params = new URLSearchParams({
-      agg: paramsData.value.agg,
-    })
-    if (paramsData.value.clipRange) {
-      const clipStartYear = paramsData.value.clipRange[0]
-      const clipEndYear = paramsData.value.clipRange[1]
-      params.append('clipRange', `${clipStartYear},${clipEndYear}`)
-    }
-    const ds = paramsData.value.dataset ?? dataset?.value
-    if (ds)
-      params.append('dataset', String(ds))
-
-    rawSeries.value = await $fetch(`/api/loadTimeSeries?${params.toString()}`)
-      .then(res => res.series as TimeSeries[])
-      .catch((e) => {
-        console.error('Failed to load time series data:', e)
-        return new Array<TimeSeries>()
-      })
-    emit('update:points', rawSeries.value?.map(
-      ts => ({
-        id: ts.id,
-        label: ts.label,
-        lat: ts.lat,
-        lon: ts.lon,
-      }),
-    ) || [])
-  },
-)
-
-watchEffect(
-  async () => {
-    if (!rawSeries.value)
-      return
-    const params = new URLSearchParams({
-      smoothWindow: paramsPreprocess.value.smoothWindow.toString(),
-      diffOrder: paramsPreprocess.value.diffOrder.toString(),
-    })
-    processedSeries.value = await $fetch(`/api/preprocessTimeSeries?${params.toString()}`, {
-      method: 'POST',
-      body: rawSeries.value,
-    })
-      .then(res => res.processedSeries as TimeSeries[])
-      .catch((e) => {
-        console.error('Failed to preprocess time series data:', e)
-        return new Array<TimeSeries>()
-      })
-  },
-)
-
-// Detect mutations
+// 检测 mutations
 watchEffect(
   async () => {
     if (!processedSeries.value)
@@ -152,10 +96,10 @@ watchEffect(
         rawSeries: rawSeries.value,
       },
     })
-      .then(res => res.mutationPoints as MutationPoint[])
+      .then(res => (res as { mutationPoints: MutationPoint[] }).mutationPoints)
       .catch((e) => {
         console.error('Failed to detect mutations, ', e)
-        return new Array<MutationPoint>()
+        return [] as MutationPoint[]
       })
     emit('update:mutationPoints', mutationPoints.value || [])
   },
@@ -188,18 +132,14 @@ watchEffect(
         smoothWindow: paramsPreprocess.smoothWindow,
         diffOrder: paramsPreprocess.diffOrder,
       }"
-      @update:preprocess-params="(params: ParamsPreprocess) => {
-        paramsPreprocess = params
-      }"
+      @update:preprocess-params="(p: ParamsPreprocess) => paramsPreprocess = p"
     />
     <QSeperator
       title="Mutation Detection"
       un-text="amber-500"
     />
     <ParamsMutation
-      @update:mutation-params="(params: ParamsMutation) => {
-        paramsMutation = params
-      }"
+      @update:mutation-params="(p: ParamsMutation) => paramsMutation = p"
     />
     <QSeperator
       title="Points of Interest"
@@ -210,16 +150,10 @@ watchEffect(
       :poi-candidates
     />
     <ChartTimeSeries
-      :time-series="
-        {
-          raw: rawSeries?.filter(
-            ts => ts.id === poi,
-          )[0],
-          processed:
-            processedSeries?.filter(
-              ts => ts.id === poi,
-            )[0],
-        }"
+      :time-series="{
+        raw: selectedSeries,
+        processed: processedSeries?.find(ts => ts.id === poi),
+      }"
       :breaks="breaksForPoi"
     />
     <QSeperator

@@ -13,62 +13,79 @@ const emit = defineEmits<{
   (e: 'update:breaks', breaks: Break[]): void
 }>()
 
-const poi = defineModel('poi')
-const dataset = defineModel('dataset')
-const rawSeries = ref<TimeSeries[] | undefined>(undefined)
-const processedSeries = ref<TimeSeries[] | undefined>(undefined)
-const segments = ref<Segment[]>([])
-const breaks = ref<Break[]>([])
-const tCandidates = ref<number[]>([])
+const poiModel = defineModel<string | undefined>('poi')
+const dataset = defineModel<string | undefined>('dataset')
 
-const segmentPresets: { value: string, years: number[] }[] = [
-  {
-    value: '5 Segment',
-    years: [2004, 2008, 2012, 2016],
-  },
-  {
-    value: 'Custom',
-    years: [],
-  },
-]
-const segmentPresetSelected = ref<string>(segmentPresets[0]!.value)
-const segmentBreakYears = ref<number[]>([...segmentPresets[0]!.years])
-
+// 参数状态
 const paramsData = ref<ParamsData>({
   agg: 'avg',
 })
-
-function handleDataParamsUpdate(params: ParamsData) {
-  paramsData.value = params
-  dataset.value = params.dataset
-}
 
 const paramsPreprocess = ref<ParamsPreprocess>({
   smoothWindow: 1,
   diffOrder: 0,
 })
 
+// Segment 特定状态
+const segments = ref<Segment[]>([])
+const breaks = ref<Break[]>([])
+
+const segmentPresets: { value: string, years: number[] }[] = [
+  { value: '5 Segment', years: [2004, 2008, 2012, 2016] },
+  { value: 'Custom', years: [] },
+]
+const segmentPresetSelected = ref<string>(segmentPresets[0]!.value)
+const segmentBreakYears = ref<number[]>([...segmentPresets[0]!.years])
+
+// 使用共享 composables
+const { rawSeries, processedSeries, points } = usePlaygroundData({
+  paramsData,
+  paramsPreprocess,
+  dataset,
+})
+
+const { poi, poiCandidates, tCandidates } = usePlaygroundPoi({
+  rawSeries,
+})
+
+// 同步 poi v-model
+watch(poi, (newVal) => {
+  poiModel.value = newVal
+}, { immediate: true })
+
+watch(poiModel, (newVal) => {
+  if (newVal !== poi.value) {
+    poi.value = newVal
+  }
+})
+
+// 监听 points 变化，emit 给父组件
+watch(points, (newPoints) => {
+  if (newPoints) {
+    emit('update:points', newPoints)
+  }
+}, { immediate: true })
+
+// 数据参数更新处理
+function handleDataParamsUpdate(params: ParamsData) {
+  paramsData.value = params
+  dataset.value = params.dataset
+}
+
+// Break years 管理
 const paramsSegment = computed<ParamsSegment>(() => ({
   presetKey: segmentPresetSelected.value,
   breakYears: [...segmentBreakYears.value],
 }))
 
 const tMin = computed(() => {
-  if (!tCandidates.value || tCandidates.value.length === 0)
-    return undefined
+  if (!tCandidates.value?.length) return undefined
   return Math.min(...tCandidates.value)
 })
 
 const tMax = computed(() => {
-  if (!tCandidates.value || tCandidates.value.length === 0)
-    return undefined
+  if (!tCandidates.value?.length) return undefined
   return Math.max(...tCandidates.value)
-})
-
-const poiCandidates = computed<string[] | undefined>(() => {
-  if (!rawSeries.value || rawSeries.value.length === 0)
-    return undefined
-  return rawSeries.value.map((series: TimeSeries) => series.label) || []
 })
 
 const segmentPresetItems = computed(() => segmentPresets.map(preset => preset.value))
@@ -82,8 +99,7 @@ const breakYearSelection = computed<string[]>({
 })
 
 function isSameYears(a: number[], b: number[]) {
-  if (a.length !== b.length)
-    return false
+  if (a.length !== b.length) return false
   return a.every((v, idx) => v === b[idx])
 }
 
@@ -106,17 +122,13 @@ function updateBreakYears(years: number[]) {
 }
 
 function shiftBreakYears(delta: number) {
-  if (!segmentBreakYears.value || segmentBreakYears.value.length === 0)
-    return
+  if (!segmentBreakYears.value?.length) return
   updateBreakYears(segmentBreakYears.value.map(year => year + delta))
 }
 
 watch(segmentPresetSelected, (value) => {
   const preset = segmentPresets.find(p => p.value === value)
-  if (!preset)
-    return
-  if (preset.value === '自定义')
-    return
+  if (!preset || preset.value === '自定义') return
   updateBreakYears(preset.years)
 })
 
@@ -127,67 +139,12 @@ watch(tCandidates, () => {
     updateBreakYears(segmentBreakYears.value)
 })
 
+// Segment API 调用
 watchEffect(
   async () => {
-    const params = new URLSearchParams({
-      agg: paramsData.value.agg,
-    })
-    if (paramsData.value.clipRange) {
-      const clipStartYear = paramsData.value.clipRange[0]
-      const clipEndYear = paramsData.value.clipRange[1]
-      params.append('clipRange', `${clipStartYear},${clipEndYear}`)
-    }
-    const ds = paramsData.value.dataset ?? dataset?.value
-    if (ds)
-      params.append('dataset', String(ds))
+    if (!processedSeries.value?.length) return
+    if (!paramsSegment.value.breakYears?.length) return
 
-    rawSeries.value = await $fetch(`/api/loadTimeSeries?${params.toString()}`)
-      .then(res => res.series as TimeSeries[])
-      .catch((e) => {
-        console.error('Failed to load time series data:', e)
-        return new Array<TimeSeries>()
-      })
-    tCandidates.value = rawSeries.value?.[0]?.points.map(
-      (p: { t: Date, v: number }) => new Date(p.t).getFullYear(),
-    ) || []
-    emit('update:points', rawSeries.value?.map(
-      ts => ({
-        id: ts.id,
-        label: ts.label,
-        lat: ts.lat,
-        lon: ts.lon,
-      }),
-    ) || [])
-  },
-)
-
-watchEffect(
-  async () => {
-    if (!rawSeries.value)
-      return
-    const params = new URLSearchParams({
-      smoothWindow: paramsPreprocess.value.smoothWindow.toString(),
-      diffOrder: paramsPreprocess.value.diffOrder.toString(),
-    })
-    processedSeries.value = await $fetch(`/api/preprocessTimeSeries?${params.toString()}`, {
-      method: 'POST',
-      body: rawSeries.value,
-    })
-      .then(res => res.processedSeries as TimeSeries[])
-      .catch((e) => {
-        console.error('Failed to preprocess time series data:', e)
-        return new Array<TimeSeries>()
-      })
-  },
-)
-
-// Segment the processed series into break-based segments
-watchEffect(
-  async () => {
-    if (!processedSeries.value || processedSeries.value.length === 0)
-      return
-    if (!paramsSegment.value.breakYears || paramsSegment.value.breakYears.length === 0)
-      return
     try {
       const res = await $fetch(`/api/segmentTimeSeries`, {
         method: 'POST',
@@ -237,9 +194,7 @@ watchEffect(
         smoothWindow: paramsPreprocess.smoothWindow,
         diffOrder: paramsPreprocess.diffOrder,
       }"
-      @update:preprocess-params="(params: ParamsPreprocess) => {
-        paramsPreprocess = params
-      }"
+      @update:preprocess-params="(p: ParamsPreprocess) => paramsPreprocess = p"
     />
     <QSeperator
       title="Segmentation"
@@ -320,25 +275,19 @@ watchEffect(
       :poi-candidates
     />
     <ChartTimeSeries
-      :time-series="
-        {
-          raw: rawSeries?.filter(
-            ts => ts.id === poi,
-          )[0],
-          processed:
-            processedSeries?.filter(
-              ts => ts.id === poi,
-            )[0],
-        }"
-      :breaks="breaks?.filter(bk => bk.lakeId === poi)"
+      :time-series="{
+        raw: rawSeries?.find(ts => ts.id === poi),
+        processed: processedSeries?.find(ts => ts.id === poi),
+      }"
+      :breaks="breaks?.filter((bk: Break) => bk.lakeId === poi)"
     />
     <QSeperator
       title="Segment Stats"
       un-text="teal-500"
     />
     <SegmentStatsTable
-      :segments="segments?.filter(seg => seg.lakeId === poi)"
-      :breaks="breaks?.filter(bk => bk.lakeId === poi)"
+      :segments="segments?.filter((seg: Segment) => seg.lakeId === poi)"
+      :breaks="breaks?.filter((bk: Break) => bk.lakeId === poi)"
     />
   </div>
 </template>

@@ -22,7 +22,7 @@ watchEffect(async () => {
     :lake-factors="lakeFactorsMap"
   >
     <template #sidebar>
-      <SegmentsSideView
+      <PlaygroundSegmentSideView
         v-model:poi="poi"
         v-model:dataset="dataset"
         @update:points="points = $event"
@@ -32,7 +32,7 @@ watchEffect(async () => {
     </template>
 
     <template #main>
-      <SegmentMainView
+      <PlaygroundSegmentMainView
         v-model:poi="poi"
         :points="points"
         :segments="segments"

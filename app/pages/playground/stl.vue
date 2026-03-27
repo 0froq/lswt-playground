@@ -23,7 +23,7 @@ watchEffect(async () => {
     :lake-factors="lakeFactorsMap"
   >
     <template #sidebar>
-      <StlSideView
+      <PlaygroundStlSideView
         v-model:poi="poi"
         v-model:dataset="dataset"
         @update:points="points = $event"
@@ -33,7 +33,7 @@ watchEffect(async () => {
     </template>
 
     <template #main>
-      <StlMainView
+      <PlaygroundStlMainView
         v-model:poi="poi"
         :points="points"
         :stl-results="stlResults"

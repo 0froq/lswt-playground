@@ -82,14 +82,5 @@ const timeFilterRange = ref<{
       :mutations="mutationPoints"
       :t-candidates="tCandidates"
     />
-    <QSeperator
-      title="Mutation Factor Matrix"
-      un-text="amber-500"
-    />
-    <MutationFactorMatrix
-      :mutations="mutationPoints"
-      :lake-factors="props.lakeFactors"
-      :time-filter="timeFilterRange"
-    />
   </div>
 </template>

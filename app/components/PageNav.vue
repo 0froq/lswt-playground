@@ -40,10 +40,6 @@ const navigationTree = [
       },
     ],
   },
-  {
-    label: 'Slides',
-    url: '/slides',
-  },
 ]
 </script>
 

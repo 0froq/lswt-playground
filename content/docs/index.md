@@ -5,10 +5,6 @@ description: Learn about LSWT analysis methodology and tools
 
 [[toc]]
 
-### Presentations
-
-- [Presentation](/slides) - Interactive slide deck
-
 ---
 
 ## About This Project

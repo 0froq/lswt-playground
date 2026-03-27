@@ -10,11 +10,26 @@ const emit = defineEmits<{
   (e: 'update:trend-analysis', analysis: STLTrendAnalysisItem[]): void
 }>()
 
-const poi = defineModel('poi')
-const dataset = defineModel('dataset')
+const poiModel = defineModel<string | undefined>('poi')
+const dataset = defineModel<string | undefined>('dataset')
 const rawSeries = ref<TimeSeries[] | undefined>(undefined)
+
+// 使用共享 POI composable
+const { poi, poiCandidates, tCandidates, selectedSeries } = usePlaygroundPoi({
+  rawSeries,
+})
+
+// 同步 poi v-model
+watch(poi, (newVal) => {
+  poiModel.value = newVal
+}, { immediate: true })
+
+watch(poiModel, (newVal) => {
+  if (newVal !== poi.value) {
+    poi.value = newVal
+  }
+})
 const stlResults = ref<STLResult[]>([])
-const tCandidates = ref<number[]>([])
 
 const seasonalPeriodNum = ref<number>(12)
 const innerIterationsNum = ref<number>(3)
@@ -116,13 +131,6 @@ const seasonalWindow = computed({
 const trendWindow = computed({
   get: () => String(trendWindowNum.value),
   set: (val: string) => { trendWindowNum.value = Number(val) },
-})
-
-const poiCandidates = computed<string[] | undefined>(() => {
-  if (!rawSeries.value || rawSeries.value.length === 0) {
-    return undefined
-  }
-  return rawSeries.value.map((series: TimeSeries) => series.label) || []
 })
 
 const selectedSTL = computed<STLResult | undefined>(() => {
@@ -246,10 +254,6 @@ watch([() => dataset?.value, datasetSelected], async ([externalDs, internalDs]) 
     console.error('Failed to load time series data:', e)
     rawSeries.value = []
   }
-
-  tCandidates.value = rawSeries.value?.[0]?.points.map(
-    (p: { t: Date, v: number }) => new Date(p.t).getFullYear(),
-  ) || []
 
   emit('update:points', rawSeries.value?.map(
     ts => ({

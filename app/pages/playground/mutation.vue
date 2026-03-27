@@ -20,7 +20,7 @@ watchEffect(async () => {
     :lake-factors="lakeFactorsMap"
   >
     <template #sidebar>
-      <MutationSideView
+      <PlaygroundMutationSideView
         v-model:poi="poi"
         v-model:dataset="dataset"
         @update:points="points = $event"
@@ -29,7 +29,7 @@ watchEffect(async () => {
     </template>
 
     <template #main>
-      <MutationMainView
+      <PlaygroundMutationMainView
         v-model:poi="poi"
         :points="points"
         :mutation-points="mutationPoints"
