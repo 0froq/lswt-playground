@@ -1,9 +1,0 @@
-{
-  "id": "T-18db8f30-4bf6-4999-8097-abb0b872321a",
-  "subject": "Trace map and point-selection implementation",
-  "description": "Identify Plotly map component pattern and click-to-time-series flow used by Segments and Mutation pages.",
-  "status": "completed",
-  "blocks": [],
-  "blockedBy": [],
-  "threadID": "ses_31d21cfa5ffefpdgS3iyA4bHRD"
-}

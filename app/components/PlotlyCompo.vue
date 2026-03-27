@@ -19,5 +19,6 @@ usePlotly(el, props, emit)
   <div
     ref="el"
     un-w-full
+    un-h-full
   />
 </template>

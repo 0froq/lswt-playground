@@ -1,4 +1,5 @@
 <script setup lang="ts">
+import { nextTick } from 'vue'
 import type { LakePoint, TimeSeries } from '~/types/mutation'
 import type {
   ParamsData,
@@ -11,6 +12,7 @@ const emit = defineEmits<{
   (e: 'update:points', points: LakePoint[]): void
   (e: 'update:segments', segments: Segment[]): void
   (e: 'update:breaks', breaks: Break[]): void
+  (e: 'update:rawSeries', rawSeries: TimeSeries[]): void
 }>()
 
 const poiModel = defineModel<string | undefined>('poi')
@@ -31,7 +33,8 @@ const segments = ref<Segment[]>([])
 const breaks = ref<Break[]>([])
 
 const segmentPresets: { value: string, years: number[] }[] = [
-  { value: '5 Segment', years: [2004, 2008, 2012, 2016] },
+  { value: '5 Segment', years: [2000, 2004, 2008, 2012, 2016, 2020] },
+  { value: 'hiatus', years: [1998, 2012] },
   { value: 'Custom', years: [] },
 ]
 const segmentPresetSelected = ref<string>(segmentPresets[0]!.value)
@@ -66,6 +69,13 @@ watch(points, (newPoints) => {
   }
 }, { immediate: true })
 
+// 监听 rawSeries 变化，emit 给父组件
+watch(rawSeries, (newRawSeries) => {
+  if (newRawSeries) {
+    emit('update:rawSeries', newRawSeries)
+  }
+}, { immediate: true })
+
 // 数据参数更新处理
 function handleDataParamsUpdate(params: ParamsData) {
   paramsData.value = params
@@ -79,12 +89,14 @@ const paramsSegment = computed<ParamsSegment>(() => ({
 }))
 
 const tMin = computed(() => {
-  if (!tCandidates.value?.length) return undefined
+  if (!tCandidates.value?.length)
+    return undefined
   return Math.min(...tCandidates.value)
 })
 
 const tMax = computed(() => {
-  if (!tCandidates.value?.length) return undefined
+  if (!tCandidates.value?.length)
+    return undefined
   return Math.max(...tCandidates.value)
 })
 
@@ -99,7 +111,8 @@ const breakYearSelection = computed<string[]>({
 })
 
 function isSameYears(a: number[], b: number[]) {
-  if (a.length !== b.length) return false
+  if (a.length !== b.length)
+    return false
   return a.every((v, idx) => v === b[idx])
 }
 
@@ -122,13 +135,15 @@ function updateBreakYears(years: number[]) {
 }
 
 function shiftBreakYears(delta: number) {
-  if (!segmentBreakYears.value?.length) return
+  if (!segmentBreakYears.value?.length)
+    return
   updateBreakYears(segmentBreakYears.value.map(year => year + delta))
 }
 
 watch(segmentPresetSelected, (value) => {
   const preset = segmentPresets.find(p => p.value === value)
-  if (!preset || preset.value === '自定义') return
+  if (!preset || preset.value === '自定义')
+    return
   updateBreakYears(preset.years)
 })
 
@@ -142,8 +157,10 @@ watch(tCandidates, () => {
 // Segment API 调用
 watchEffect(
   async () => {
-    if (!processedSeries.value?.length) return
-    if (!paramsSegment.value.breakYears?.length) return
+    if (!processedSeries.value?.length)
+      return
+    if (!paramsSegment.value.breakYears?.length)
+      return
 
     try {
       const res = await $fetch(`/api/segmentTimeSeries`, {
@@ -162,8 +179,10 @@ watchEffect(
       segments.value = []
       breaks.value = []
     }
-    emit('update:segments', segments.value)
-    emit('update:breaks', breaks.value)
+    // 确保 breaks 和 segments 都已经设置好再 emit
+    await nextTick()
+    emit('update:segments', [...segments.value])
+    emit('update:breaks', [...breaks.value])
   },
 )
 </script>

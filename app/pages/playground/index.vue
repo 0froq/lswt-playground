@@ -82,6 +82,14 @@ definePageMeta({
         tooltip-text="Decompose time series into trend, seasonal, and remainder components using LOESS."
         href="/playground/stl"
       />
+      <LinkUnderline
+        un-text="2xl"
+        un-before="bg-gradient-to-r from-sky-100 to-sky-500"
+        text="Sliding Window Analysis"
+        :tooltip="true"
+        tooltip-text="Analyze lake temperature trends using sliding windows with spatial clustering."
+        href="/playground/sliding"
+      />
     </div>
   </div>
 </template>

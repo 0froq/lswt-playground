@@ -5,6 +5,7 @@ catalog:
   '@iconify-json/solar': ^1.2.5
   '@opencode-ai/plugin': 1.2.15
   loess: ^1.3.5
+  ml-kmeans: 'catalog:'
 
 catalogMode: prefer
 

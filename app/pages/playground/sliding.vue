@@ -1,12 +1,13 @@
 <script setup lang="ts">
-import type { LakePoint, TimeSeries } from '~/types/mutation'
-import type { Break, Segment } from '~/types/segments'
+import type { LakePoint } from '~/types/mutation'
+import type { SlidingWindowAnalysisResponse } from '~/types/sliding'
+import type { SpatialClusteringResponse } from '~/types/clustering'
 
 const poi = ref<string | undefined>(undefined)
 const points = ref<LakePoint[] | undefined>(undefined)
-const segments = ref<Segment[] | undefined>(undefined)
-const breaks = ref<Break[] | undefined>(undefined)
-const rawSeries = ref<TimeSeries[] | undefined>(undefined)
+const rawSeries = ref<any[] | undefined>(undefined)
+const slidingAnalysis = ref<SlidingWindowAnalysisResponse | undefined>(undefined)
+const clusteringAnalysis = ref<SpatialClusteringResponse | undefined>(undefined)
 const dataset = ref<string | undefined>(undefined)
 
 const { lakeFactorsMap, loadFactors } = useLakeFactors()
@@ -18,29 +19,28 @@ watchEffect(async () => {
 
 <template>
   <PlaygroundLayout
-    title="Segmentation Analysis"
-    theme="teal"
+    title="Sliding Window Analysis"
+    theme="sky"
     :lake-factors="lakeFactorsMap"
   >
     <template #sidebar>
-      <PlaygroundSegmentSideView
+      <PlaygroundSlidingSideView
         v-model:poi="poi"
         v-model:dataset="dataset"
         @update:points="points = $event"
-        @update:segments="segments = $event"
-        @update:breaks="breaks = $event"
         @update:raw-series="rawSeries = $event"
+        @update:sliding-analysis="slidingAnalysis = $event"
+        @update:clustering-analysis="clusteringAnalysis = $event"
       />
     </template>
 
     <template #main>
-      <PlaygroundSegmentMainView
+      <PlaygroundSlidingMainView
         v-model:poi="poi"
         :points="points"
-        :segments="segments"
-        :breaks="breaks"
-        :lake-factors="lakeFactorsMap"
         :raw-series="rawSeries"
+        :sliding-analysis="slidingAnalysis"
+        :clustering-analysis="clusteringAnalysis"
       />
     </template>
   </PlaygroundLayout>

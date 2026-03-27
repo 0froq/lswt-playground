@@ -1,1 +1,0 @@
-@keyframes grow-20719755{0%{opacity:0;stroke-dasharray:0 var(--signature-length);stroke-dashoffset:1px}10%{opacity:1}50%{stroke-dasharray:var(--signature-length) 0}95%,to{stroke-dasharray:0 var(--signature-length)}}#animated[data-v-20719755]{--signature-length:2000px;animation:grow-20719755 10s linear infinite;stroke-dasharray:40 0}main *::-webkit-scrollbar{width:1px}

@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import type { LakeFactors } from '~/types/factor'
-import type { LakePoint } from '~/types/mutation'
+import type { LakePoint, TimeSeries } from '~/types/mutation'
 import type { Break, Segment } from '~/types/segments'
 
 const props = defineProps<{
@@ -8,6 +8,7 @@ const props = defineProps<{
   segments?: Segment[]
   breaks?: Break[]
   lakeFactors?: Map<string, LakeFactors>
+  rawSeries?: TimeSeries[]
 }>()
 
 const poi = defineModel<string | undefined>('poi')
@@ -45,6 +46,14 @@ const poi = defineModel<string | undefined>('poi')
     />
     <SegmentSummaryView
       :segments="props.segments"
+      :breaks="props.breaks"
+    />
+    <QSeperator
+      title="Global Average Temperature"
+      un-text="teal-500"
+    />
+    <SegmentGlobalAverageChart
+      :raw-series="props.rawSeries"
       :breaks="props.breaks"
     />
   </div>

@@ -151,7 +151,7 @@ const layout = computed(() => {
       xref: 'x',
       yref: 'y',
       line: {
-        color: 'orange',
+        color: usePlotlyColor('line'),
         width: 2,
         dash: 'dot',
       },

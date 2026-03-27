@@ -39,6 +39,7 @@
   },
   "dependencies": {
     "loess": "catalog:",
+    "ml-kmeans": "catalog:",
     "plotly.js-dist-min": "catalog:frontend"
   },
   "devDependencies": {

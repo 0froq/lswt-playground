@@ -3,7 +3,7 @@ import type { LakeFactors } from '~/types/factor'
 
 defineProps<{
   title: string
-  theme: 'amber' | 'teal' | 'purple'
+  theme: 'amber' | 'teal' | 'purple' | 'sky'
   lakeFactors?: Map<string, LakeFactors>
 }>()
 </script>
